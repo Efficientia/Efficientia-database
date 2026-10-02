@@ -154,7 +154,7 @@ SELECT fk_empresa,
 
     -- Window Function 1: Running Total (Soma Acumulada) de mortes da empresa no ano
     SUM(SUM(qtd_morto))                     OVER (
-        PARTITION BY fk_empresa, EXTRACT(YEAR FROM data_referencia)
+        PARTITION BY fk_empresa, EXTRACT(YEAR FROM DATE_TRUNC('month', data_referencia))
         ORDER BY DATE_TRUNC('month', data_referencia)
     ) AS acumulado_mortes_ano,
 
