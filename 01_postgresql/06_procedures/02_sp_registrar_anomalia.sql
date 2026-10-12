@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 CREATE
 OR REPLACE PROCEDURE sc_operacao.sp_registrar_anomalia(
@@ -21,7 +21,7 @@ WHERE codigo = p_codigo_anomalia
 
 IF
 v_dominio_anomalia_id IS NULL THEN
-        RAISE EXCEPTION 'Operação Bloqueada: Código de anomalia "%" inválido, inativo ou não pertence à etapa de %.', p_codigo_anomalia, p_tipo_etapa
+        RAISE EXCEPTION 'Opera├º├úo Bloqueada: C├│digo de anomalia "%" inv├ílido, inativo ou n├úo pertence ├á etapa de %.', p_codigo_anomalia, p_tipo_etapa
         USING ERRCODE = 'P0006';
 END IF;
 
@@ -50,7 +50,7 @@ p_tipo_etapa = 'DESEMBARQUE' THEN
         );
 
 ELSE
-        RAISE EXCEPTION 'Etapa inválida. Utilize "EMBARQUE" ou "DESEMBARQUE".'
+        RAISE EXCEPTION 'Etapa inv├ílida. Utilize "EMBARQUE" ou "DESEMBARQUE".'
         USING ERRCODE = 'P0007';
 END IF;
 

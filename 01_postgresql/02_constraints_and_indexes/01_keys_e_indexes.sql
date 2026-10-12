@@ -1,7 +1,7 @@
-BEGIN;
+﻿BEGIN;
 
 -- ==============================================================================
--- 1. ÍNDICES DE ISOLAMENTO MULTI-TENANT
+-- 1. ├ìNDICES DE ISOLAMENTO MULTI-TENANT
 -- ==============================================================================
 CREATE INDEX idx_usuario_empresa ON sc_corporativo.tb_usuario (empresa_id);
 CREATE INDEX idx_veiculo_base_empresa ON sc_frota.tb_veiculo_base (empresa_id);
@@ -10,7 +10,7 @@ CREATE INDEX idx_unidade_frigorifica_empresa ON sc_corporativo.tb_unidade_frigor
 CREATE INDEX idx_relatorio_viagem_empresa ON sc_operacao.tb_relatorio_viagem (empresa_id);
 
 -- ==============================================================================
--- 2. ÍNDICES DE RELACIONAMENTO (FOREIGN KEYS)
+-- 2. ├ìNDICES DE RELACIONAMENTO (FOREIGN KEYS)
 -- ==============================================================================
 -- [sc_corporativo]
 CREATE INDEX idx_empresa_endereco ON sc_corporativo.tb_empresa (endereco_id);
@@ -44,7 +44,7 @@ CREATE INDEX idx_aud_analise_analista ON sc_operacao.tb_auditoria_analise (anali
 CREATE INDEX idx_monitoramento_dau_usuario ON sc_auditoria.tb_monitoramento_dau (usuario_id);
 
 -- ==============================================================================
--- 3. ÍNDICES DE PERFORMANCE PARA BUSCAS E FILTROS FREQUENTES
+-- 3. ├ìNDICES DE PERFORMANCE PARA BUSCAS E FILTROS FREQUENTES
 -- ==============================================================================
 CREATE INDEX idx_usuario_cpf ON sc_corporativo.tb_usuario (cpf);
 CREATE INDEX idx_veiculo_base_placa ON sc_frota.tb_veiculo_base (placa);
