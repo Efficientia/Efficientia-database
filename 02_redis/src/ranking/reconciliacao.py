@@ -43,9 +43,12 @@ class RankingReconciler:
                         fk_empresa,
                         fk_motorista,
                         TO_CHAR(mes_referencia, 'YYYY-MM') AS ano_mes,
-                        volume_animais_mes,
-                        total_mortes_mes,
-                        taxa_mortalidade_percentual
+                        SUM(volume_animais_mes) AS volume_animais_mes,
+                        SUM(total_mortes_mes) AS total_mortes_mes,
+                        ROUND(
+                            (SUM(total_mortes_mes)::NUMERIC / NULLIF(SUM(volume_animais_mes), 0)) * 100,
+                            2
+                        ) AS taxa_mortalidade_percentual
                     FROM sc_operacao.mv_analise_mortalidade_mensal
                     WHERE fk_empresa = %s
                 """
@@ -55,7 +58,10 @@ class RankingReconciler:
                     query += " AND TO_CHAR(mes_referencia, 'YYYY-MM') = %s"
                     params.append(ano_mes)
 
-                query += " ORDER BY mes_referencia DESC;"
+                query += """
+                    GROUP BY fk_empresa, fk_motorista, TO_CHAR(mes_referencia, 'YYYY-MM')
+                    ORDER BY TO_CHAR(mes_referencia, 'YYYY-MM') DESC;
+                """
 
                 cur.execute(query, tuple(params))
                 rows = cur.fetchall()

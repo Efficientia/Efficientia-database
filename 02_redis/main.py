@@ -4,8 +4,12 @@ import argparse
 from datetime import datetime
 import json
 import logging
+from pathlib import Path
 import sys
 import uuid
+
+# Garante que o diretório 02_redis esteja no PYTHONPATH
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 logging.basicConfig(
     level=logging.INFO,
