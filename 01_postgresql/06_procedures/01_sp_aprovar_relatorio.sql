@@ -1,4 +1,4 @@
-﻿BEGIN;
+BEGIN;
 
 CREATE
 OR REPLACE PROCEDURE sc_operacao.sp_aprovar_relatorio(
@@ -19,13 +19,13 @@ WHERE id = p_relatorio_id
 
 IF
 v_status_atual IS NULL THEN
-        RAISE EXCEPTION 'Opera├º├úo Bloqueada: Relat├│rio % n├úo encontrado.', p_relatorio_id
+        RAISE EXCEPTION 'Operação Bloqueada: Relatório % não encontrado.', p_relatorio_id
         USING ERRCODE = 'P0004';
 END IF;
 
     IF
 v_status_atual != 'pendente' THEN
-        RAISE EXCEPTION 'Opera├º├úo Bloqueada: Apenas relat├│rios com status "pendente" podem ser aprovados. Status atual: %', v_status_atual
+        RAISE EXCEPTION 'Operação Bloqueada: Apenas relatórios com status "pendente" podem ser aprovados. Status atual: %', v_status_atual
         USING ERRCODE = 'P0005';
 END IF;
 

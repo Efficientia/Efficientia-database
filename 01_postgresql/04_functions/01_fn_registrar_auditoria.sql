@@ -1,4 +1,4 @@
-﻿BEGIN;
+BEGIN;
 
 CREATE
 OR REPLACE FUNCTION sc_auditoria.fn_registrar_auditoria()
