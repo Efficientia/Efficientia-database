@@ -18,6 +18,7 @@ from .. import keys
 from ..jobs.base import BaseJob
 from ..jobs.alerta_mortalidade import AlertaMortalidadeJob
 from ..jobs.alerta_sla import AlertaEmergenciaJob
+from ..jobs.atualizar_ranking import AtualizarRankingJob
 
 logger = logging.getLogger("efficientia.consumer")
 
@@ -38,7 +39,11 @@ class StreamConsumer:
         self.consumer_name = consumer_name or f"worker_{socket.gethostname()}"
         self.stream_key = keys.stream_eventos(empresa_id)
         self.dlq_key = keys.stream_dlq(empresa_id)
-        self.jobs = jobs or [AlertaMortalidadeJob(), AlertaEmergenciaJob()]
+        self.jobs = jobs or [
+            AlertaMortalidadeJob(),
+            AlertaEmergenciaJob(),
+            AtualizarRankingJob(redis_client=self.redis),
+        ]
         self._running = True
 
     def ensure_group(self) -> None:
