@@ -25,7 +25,12 @@ Efficientia-database/
 │   └── 07_dataload/            # Cargas DML iniciais (Catálogo de Dados e Domínios)
 │
 ├── 02_redis/                   # Sistema de Filas & Ranking em Tempo Real (Upstash) [MD-51]
-│   └── (Estrutura da aplicação de filas de eventos e leaderboards em tempo real)
+│   ├── .env.example            # Variáveis de ambiente do Redis e Upstash
+│   ├── README.md               # Documentação da fila, streams e comandos
+│   ├── requirements.txt        # Dependências do driver Redis, psycopg e testes
+│   ├── main.py                 # CLI de execução do Outbox Relay e Workers
+│   ├── src/                    # Implementação de Outbox Relay, Consumer Groups e Jobs
+│   └── tests/                  # Testes automatizados com fakeredis
 │
 ├── 03_mongodb/                 # Banco Conversacional e Não-Estruturado [MD-50]
 │   └── (Futuro: Interações conversacionais e dados semiestruturados)
