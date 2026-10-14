@@ -116,4 +116,23 @@ CREATE TABLE sc_operacao.tb_auditoria_analise
     CONSTRAINT fk_aud_analise_usuario FOREIGN KEY (analista_id) REFERENCES sc_corporativo.tb_usuario (id) ON DELETE RESTRICT
 );
 
+-- ==============================================================================
+-- 3. MENSAGERIA / EVENTOS ASSÍNCRONOS (TRANSACTIONAL OUTBOX)
+-- ==============================================================================
+CREATE TABLE sc_operacao.tb_outbox_evento
+(
+    id              UUID         DEFAULT gen_random_uuid(),
+    empresa_id      UUID         NOT NULL,
+    tipo_evento     VARCHAR(100) NOT NULL,
+    agregado_tipo   VARCHAR(50)  NOT NULL DEFAULT 'relatorio_viagem',
+    agregado_id     UUID         NOT NULL,
+    payload         JSONB        NOT NULL,
+    criado_em       TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP,
+    processado_em   TIMESTAMPTZ,
+    erro_tentativas INTEGER      NOT NULL DEFAULT 0,
+    ultimo_erro     TEXT,
+    CONSTRAINT pk_outbox_evento PRIMARY KEY (id),
+    CONSTRAINT fk_outbox_empresa FOREIGN KEY (empresa_id) REFERENCES sc_corporativo.tb_empresa (id) ON DELETE CASCADE
+);
+
 COMMIT;

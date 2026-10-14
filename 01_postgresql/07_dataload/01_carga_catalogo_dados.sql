@@ -346,6 +346,18 @@ VALUES
 ('sc_operacao', 'tb_auditoria_analise', 'motivo_rejeicao', 'Justificativa estruturada caso reprovado.',
  'Feedback sistêmico.', 'auditoria', 'auditoria'),
 ('sc_operacao', 'tb_auditoria_analise', 'parecer_tecnico', 'Nota técnica detalhada.', 'Auditoria fiscal futura.',
- 'auditoria', 'auditoria');
+ 'auditoria', 'auditoria'),
+
+-- Tabela de Eventos Assíncronos (Outbox Pattern com Redis)
+('sc_operacao', 'tb_outbox_evento', 'id', 'Identificador único do evento no Transactional Outbox.', 'Chave primária do evento.', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'empresa_id', 'Empresa/Tenant proprietária do evento gerado.', 'Isolamento multi-tenant.', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'tipo_evento', 'Identificador de tipo (ex: relatorio.status_alterado, relatorio.criado).', 'Roteamento nos tópicos/streams do Redis.', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'agregado_tipo', 'Tipo de entidade originária (ex: relatorio_viagem).', 'Rastreabilidade DDD.', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'agregado_id', 'UUID do registro principal de origem.', 'Chave estrangeira lógica do agregado.', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'payload', 'Conteúdo completo do evento em JSONB com snapshot dos dados.', 'Imutabilidade da mensagem consumida pelo Redis.', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'criado_em', 'Timestamp exato de geração do evento no banco.', 'Ordenação sequencial de consumo.', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'processado_em', 'Timestamp em que o relay publicou o evento no Redis Stream.', 'Controle de idempotência e índice parcial.', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'erro_tentativas', 'Número de tentativas de publicação que falharam.', 'Detecção de Dead Letter Queue (DLQ).', 'auditoria', 'administrativo'),
+('sc_operacao', 'tb_outbox_evento', 'ultimo_erro', 'Stacktrace ou mensagem do último erro de publicação.', 'Diagnóstico de falhas de rede com o Upstash/Redis.', 'auditoria', 'administrativo');
 
 COMMIT;

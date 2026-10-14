@@ -5,6 +5,8 @@ BEGIN;
 -- ==============================================================================
 CREATE INDEX idx_usuario_empresa ON sc_corporativo.tb_usuario (empresa_id);
 CREATE INDEX idx_veiculo_base_empresa ON sc_frota.tb_veiculo_base (empresa_id);
+CREATE INDEX idx_veiculo_cavalo_empresa ON sc_frota.tb_veiculo_cavalo (empresa_id);
+CREATE INDEX idx_veiculo_carreta_empresa ON sc_frota.tb_veiculo_carreta (empresa_id);
 CREATE INDEX idx_fazenda_empresa ON sc_corporativo.tb_fazenda (empresa_id);
 CREATE INDEX idx_unidade_frigorifica_empresa ON sc_corporativo.tb_unidade_frigorifica (empresa_id);
 CREATE INDEX idx_relatorio_viagem_empresa ON sc_operacao.tb_relatorio_viagem (empresa_id);
@@ -44,12 +46,13 @@ CREATE INDEX idx_aud_analise_analista ON sc_operacao.tb_auditoria_analise (anali
 CREATE INDEX idx_monitoramento_dau_usuario ON sc_auditoria.tb_monitoramento_dau (usuario_id);
 
 -- ==============================================================================
--- 3. ÍNDICES DE PERFORMANCE PARA BUSCAS E FILTROS FREQUENTES
+-- 3. ÍNDICES DE PERFORMANCE E MENSAGERIA
 -- ==============================================================================
-CREATE INDEX idx_usuario_cpf ON sc_corporativo.tb_usuario (cpf);
-CREATE INDEX idx_veiculo_base_placa ON sc_frota.tb_veiculo_base (placa);
-CREATE INDEX idx_relatorio_gta ON sc_operacao.tb_relatorio_viagem (numero_gta);
+-- Nota: Colunas com UNIQUE (cpf, placa, numero_gta) já possuem índices B-Tree criados automaticamente.
 CREATE INDEX idx_relatorio_pendente_aprovado
     ON sc_operacao.tb_relatorio_viagem (status) WHERE status IN ('pendente', 'aprovado');
+
+CREATE INDEX idx_outbox_pendentes
+    ON sc_operacao.tb_outbox_evento (criado_em) WHERE processado_em IS NULL;
 
 COMMIT;
