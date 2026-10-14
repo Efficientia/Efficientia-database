@@ -36,7 +36,10 @@ Efficientia-database/
 │   └── (Futuro: Interações conversacionais e dados semiestruturados)
 │
 └── 04_neo4j/                   # Banco em Grafo [MD-52]
-    └── (Futuro: Rastreabilidade de redes logísticas e traversals em grafos)
+    ├── README.md               # Modelagem do Grafo de Propriedades e análise de Traversal
+    ├── 01_schema_constraints.cypher # Constraints de unicidade e índices de nós
+    ├── 02_seed_data.cypher     # Carga de malha pecuária e vetores de contaminação cruzada
+    └── 03_traversal_queries.cypher  # Consultas de Traversal para rastreabilidade epidemiológica
 ```
 
 ---
