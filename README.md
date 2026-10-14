@@ -32,8 +32,12 @@ Efficientia-database/
 │   ├── src/                    # Implementação de Outbox Relay, Consumer Groups e Jobs
 │   └── tests/                  # Testes automatizados com fakeredis
 │
-├── 03_mongodb/                 # Banco Conversacional e Não-Estruturado [MD-50]
-│   └── (Futuro: Interações conversacionais e dados semiestruturados)
+├── 03_mongodb/                 # Banco Conversacional e Não-Estruturado (IA) [MD-50]
+│   ├── README.md               # Modelagem documental, padrão de referência e guia mongosh
+│   ├── 01_schema_validation.js # Validação estrita de schema ($jsonSchema)
+│   ├── 02_indexes.js           # Índices de performance e ordenação do chat
+│   ├── 03_seed_conversations.js # Carga de dados (threads e mensagens do orquestrador)
+│   └── 04_conversational_queries.js # Contexto LLM, FinOps/tokens e dores da frota
 │
 └── 04_neo4j/                   # Banco em Grafo [MD-52]
     ├── README.md               # Modelagem do Grafo de Propriedades e análise de Traversal
@@ -48,4 +52,6 @@ Efficientia-database/
 
 - **PostgreSQL / Supabase**: Fonte da verdade transacional, modelagem relacional normalizada (3FN), catálogo de governança e camada analítica via Star Schema.
 - **Redis / Upstash**: Processamento assíncrono de eventos através de Redis Streams, cache e rankings em tempo real com Sorted Sets.
+- **MongoDB**: Repositório de documentos flexíveis para interações conversacionais da IA, histórico de chat, telemetria de tokens e observabilidade.
+- **Neo4j**: Banco em grafo para análise de rede pecuária, rastreabilidade epidemiológica e consultas com *graph traversal*.
 - **Python**: Serviços de integração, workers de filas e reconciliação de dados.
