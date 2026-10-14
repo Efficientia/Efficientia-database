@@ -1,7 +1,6 @@
 BEGIN;
 
-CREATE
-OR REPLACE PROCEDURE sc_operacao.sp_registrar_anomalia(
+CREATE OR REPLACE PROCEDURE sc_operacao.sp_registrar_anomalia(
     p_relatorio_id UUID,
     p_tipo_etapa VARCHAR(20), -- 'EMBARQUE' ou 'DESEMBARQUE'
     p_codigo_anomalia VARCHAR(50),
@@ -10,23 +9,20 @@ OR REPLACE PROCEDURE sc_operacao.sp_registrar_anomalia(
 LANGUAGE plpgsql
 AS $$
 DECLARE
-v_dominio_anomalia_id UUID;
+    v_dominio_anomalia_id UUID;
 BEGIN
-SELECT id
-INTO v_dominio_anomalia_id
-FROM sc_operacao.tb_dominio_anomalia
-WHERE codigo = p_codigo_anomalia
-  AND tipo_etapa = p_tipo_etapa
-  AND ativo = TRUE;
+    SELECT id INTO v_dominio_anomalia_id
+    FROM sc_operacao.tb_dominio_anomalia
+    WHERE codigo = p_codigo_anomalia
+      AND tipo_etapa = p_tipo_etapa
+      AND ativo = TRUE;
 
-IF
-v_dominio_anomalia_id IS NULL THEN
+    IF v_dominio_anomalia_id IS NULL THEN
         RAISE EXCEPTION 'Operação Bloqueada: Código de anomalia "%" inválido, inativo ou não pertence à etapa de %.', p_codigo_anomalia, p_tipo_etapa
         USING ERRCODE = 'P0006';
-END IF;
+    END IF;
 
-    IF
-p_tipo_etapa = 'EMBARQUE' THEN
+    IF p_tipo_etapa = 'EMBARQUE' THEN
         INSERT INTO sc_operacao.tb_anomalia_embarque (
             relatorio_id,
             dominio_anomalia_id,
@@ -37,8 +33,7 @@ p_tipo_etapa = 'EMBARQUE' THEN
             p_descricao_outros
         );
 
-    ELSIF
-p_tipo_etapa = 'DESEMBARQUE' THEN
+    ELSIF p_tipo_etapa = 'DESEMBARQUE' THEN
         INSERT INTO sc_operacao.tb_anomalia_desembarque (
             relatorio_id,
             dominio_anomalia_id,
@@ -49,12 +44,10 @@ p_tipo_etapa = 'DESEMBARQUE' THEN
             p_descricao_outros
         );
 
-ELSE
+    ELSE
         RAISE EXCEPTION 'Etapa inválida. Utilize "EMBARQUE" ou "DESEMBARQUE".'
         USING ERRCODE = 'P0007';
-END IF;
-
-COMMIT;
+    END IF;
 END;
 $$;
 
