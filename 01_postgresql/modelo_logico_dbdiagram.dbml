@@ -1,0 +1,420 @@
+// ==============================================================================
+// MODELO LÓGICO DE DADOS (POSTGRESQL)
+// Ferramenta: dbdiagram.io (DBML - Database Markup Language)
+// Descrição: Modelo Entidade-Relacionamento Lógico completo com todas as tabelas,
+//            chaves primárias, estrangeiras, tipos ENUM e agrupamentos por Schema.
+// ==============================================================================
+
+Project efficientia_logistica_pecuaria {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Ecossistema de Dados Efficientia
+    Gestão logística e bem-estar animal no transporte pecuário (Fazenda ao Frigorífico).
+    Modelo relacional 3FN com isolamento multi-tenant, auditoria e mensageria outbox.
+  '''
+}
+
+// ==============================================================================
+// 1. TIPOS ENUMERADOS (ENUMS)
+// ==============================================================================
+
+Enum ty_tipo_usuario {
+  administrador
+  motorista
+  manobrista
+  analista
+  pecuarista
+  curraleiro
+}
+
+Enum ty_nivel_acesso {
+  administrativo
+  auditoria
+  conducao
+}
+
+Enum ty_categoria_cnh {
+  a
+  b
+  c
+  d
+  e
+}
+
+Enum ty_status_diario {
+  rascunho
+  pendente
+  aprovado
+  reprovado
+}
+
+// ==============================================================================
+// 2. SCHEMA CORPORATIVO (sc_corporativo)
+// ==============================================================================
+
+Table sc_corporativo.tb_endereco {
+  id uuid [pk, default: `gen_random_uuid()`]
+  cep varchar(10) [not null]
+  logradouro varchar(150) [not null]
+  numero varchar(20) [not null]
+  cidade varchar(100) [not null]
+  estado varchar(2) [not null]
+
+  Note: 'Endereços normalizados de empresas, fazendas e unidades frigoríficas'
+}
+
+Table sc_corporativo.tb_empresa {
+  id uuid [pk, default: `gen_random_uuid()`]
+  endereco_id uuid [not null]
+  nome varchar(150)
+  razao_social varchar(150)
+  codigo_interno varchar(20) [not null]
+  email varchar(150) [unique]
+  cnpj varchar(14) [unique, not null]
+
+  Note: 'Empresas operacionais do ecossistema (Tenant multi-tenant)'
+}
+
+Table sc_corporativo.tb_configuracao_operacao {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [unique, not null]
+  tempo_max_viagem_horas integer [not null, default: 8]
+  mortalidade_bloqueio_cabecas integer [not null, default: 1]
+  prazo_analise_horas integer [not null, default: 24]
+  meta_mortalidade numeric(5,2) [not null, default: 0.50]
+  qtd_assinaturas_obrigatorias integer [not null, default: 4]
+  alerta_sirene_re boolean [not null, default: true]
+  alerta_inspecao_dias integer [not null, default: 15]
+  alerta_cnh_vencida boolean [not null, default: true]
+  alerta_tempo_parada_imprevista integer [not null, default: 60]
+  atualizado_em timestamptz [default: `now()`]
+
+  Note: 'Parâmetros operacionais e regras de bloqueio por empresa'
+}
+
+Table sc_corporativo.tb_usuario {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [not null]
+  tipo ty_tipo_usuario [not null]
+  cargo varchar(150) [not null]
+  nivel_acesso ty_nivel_acesso [not null, default: 'conducao']
+  cpf varchar(11) [unique, not null]
+  cnh_numero varchar(20)
+  categoria_cnh ty_categoria_cnh
+  data_vencimento_cnh date
+  nome_completo varchar(250) [not null]
+  data_nascimento date
+  email varchar(150) [unique]
+  telefone varchar(20)
+  senha_hash varchar(255) [not null]
+  url_assinatura_geral text
+  status_cadastro varchar(20) [not null, default: 'ativo']
+
+  Note: 'Atores do sistema (motoristas, manobristas, curraleiros, analistas, etc.)'
+}
+
+Table sc_corporativo.tb_fazenda {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [not null]
+  pecuarista_id uuid [not null]
+  endereco_id uuid [not null]
+  nome varchar(150) [not null]
+  razao_social varchar(150)
+  cnpj varchar(14) [unique]
+
+  Note: 'Origem do gado (propriedades rurais pecuárias)'
+}
+
+Table sc_corporativo.tb_unidade_frigorifica {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [not null]
+  analista_id uuid [not null]
+  endereco_id uuid [not null]
+  nome varchar(150) [not null]
+  cnpj varchar(14) [unique, not null]
+  qtd_currais integer [not null, default: 0]
+
+  Note: 'Destino do lote de abate (plantas frigoríficas)'
+}
+
+// ==============================================================================
+// 3. SCHEMA FROTA (sc_frota)
+// ==============================================================================
+
+Table sc_frota.tb_veiculo_base {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [not null]
+  placa varchar(7) [unique, not null]
+  ativo boolean [default: true]
+  data_vencimento_inspecao date [not null]
+
+  Note: 'Tabela base da frota (Herança estrutural PostgreSQL)'
+}
+
+Table sc_frota.tb_veiculo_cavalo {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [not null]
+  placa varchar(7) [unique, not null]
+  ativo boolean [default: true]
+  data_vencimento_inspecao date [not null]
+  km_acumulado integer [not null, default: 0]
+
+  Note: 'Cavalos mecânicos / caminhões tracionadores'
+}
+
+Table sc_frota.tb_veiculo_carreta {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [not null]
+  placa varchar(7) [unique, not null]
+  ativo boolean [default: true]
+  data_vencimento_inspecao date [not null]
+  capacidade_cabecas integer [not null]
+
+  Note: 'Carretas boiadeiras e gaiolas de transporte'
+}
+
+// ==============================================================================
+// 4. SCHEMA OPERAÇÃO (sc_operacao)
+// ==============================================================================
+
+Table sc_operacao.tb_dominio_motivo_parada {
+  id uuid [pk, default: `gen_random_uuid()`]
+  codigo varchar(50) [unique, not null]
+  descricao varchar(150) [not null]
+  ativo boolean [default: true]
+
+  Note: 'Tabela domínio para motivos de paradas imprevistas'
+}
+
+Table sc_operacao.tb_dominio_anomalia {
+  id uuid [pk, default: `gen_random_uuid()`]
+  tipo_etapa varchar(20) [not null, note: 'EMBARQUE ou DESEMBARQUE']
+  codigo varchar(50) [not null]
+  descricao varchar(150) [not null]
+  ativo boolean [default: true]
+
+  Note: 'Tabela domínio de anomalias operacionais e físicas'
+}
+
+Table sc_operacao.tb_relatorio_viagem {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [not null]
+  status ty_status_diario [not null, default: 'rascunho']
+  fazenda_id uuid [not null]
+  motorista_id uuid [not null]
+  manobrista_id uuid [not null]
+  curraleiro_id uuid [not null]
+  cavalo_id uuid [not null]
+  carreta_id uuid [not null]
+  numero_gta varchar(50) [unique]
+  numero_nota_fiscal varchar(50)
+  capacidade_carga_utilizada integer [not null]
+  data_embarque date
+  horario_embarque timetz
+  horario_saida_propriedade timetz
+  km_saida_embarcadouro integer
+  data_chegada_unidade date
+  horario_chegada_unidade timetz
+  horario_desembarque timetz
+  km_chegada_desembarcadouro integer
+  numero_curral varchar(20)
+  sirene_re_funcionou boolean
+  qtd_machos integer [not null, default: 0]
+  qtd_femeas integer [not null, default: 0]
+  qtd_marrucos integer [not null, default: 0]
+  qtd_em_pe integer [not null, default: 0]
+  qtd_deitado integer [not null, default: 0]
+  qtd_morto integer [not null, default: 0]
+  qtd_emergencia integer [not null, default: 0]
+  url_laudo_mortalidade text
+  motivo_emergencia text
+  comentarios text
+  url_assinatura_pecuarista text
+  url_assinatura_motorista text
+  url_assinatura_manobrista text
+  url_assinatura_curraleiro text
+  criado_em timestamptz [default: `now()`]
+  enviado_em timestamptz
+
+  Note: 'Diário de Rota principal: transação central da viagem pecuária'
+}
+
+Table sc_operacao.tb_parada_imprevista {
+  id uuid [pk, default: `gen_random_uuid()`]
+  relatorio_id uuid [not null]
+  dominio_parada_id uuid [not null]
+  data_hora_inicio timestamptz [not null]
+  data_hora_fim timestamptz [not null]
+
+  Note: 'Registro de pausas, manutenções ou incidentes na rota'
+}
+
+Table sc_operacao.tb_anomalia_embarque {
+  id uuid [pk, default: `gen_random_uuid()`]
+  relatorio_id uuid [not null]
+  dominio_anomalia_id uuid [not null]
+  descricao_outros varchar(150)
+
+  Note: 'Anomalias detectadas durante a carga na fazenda'
+}
+
+Table sc_operacao.tb_anomalia_desembarque {
+  id uuid [pk, default: `gen_random_uuid()`]
+  relatorio_id uuid [not null]
+  dominio_anomalia_id uuid [not null]
+  descricao_outros varchar(150)
+
+  Note: 'Anomalias detectadas no desembarque no frigorífico'
+}
+
+Table sc_operacao.tb_auditoria_analise {
+  id uuid [pk, default: `gen_random_uuid()`]
+  relatorio_id uuid [not null]
+  analista_id uuid [not null]
+  data_hora_analise timestamptz [not null, default: `now()`]
+  aprovado boolean [not null]
+  motivo_rejeicao varchar(255)
+  parecer_tecnico text
+
+  Note: 'Parecer técnico de aprovação/reprovação pelo analista'
+}
+
+Table sc_operacao.tb_outbox_evento {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid [not null]
+  tipo_evento varchar(100) [not null]
+  agregado_tipo varchar(50) [not null, default: 'relatorio_viagem']
+  agregado_id uuid [not null]
+  payload jsonb [not null]
+  criado_em timestamptz [default: `now()`]
+  processado_em timestamptz
+  erro_tentativas integer [not null, default: 0]
+  ultimo_erro text
+
+  Note: 'Padrão Transactional Outbox para integração assíncrona com Redis/Workers'
+}
+
+// ==============================================================================
+// 5. SCHEMA AUDITORIA E GOVERNANÇA (sc_auditoria)
+// ==============================================================================
+
+Table sc_auditoria.tb_catalogo_dados {
+  id uuid [pk, default: `gen_random_uuid()`]
+  esquema_nome varchar(50) [default: 'public']
+  tabela_nome varchar(100) [not null]
+  coluna_nome varchar(100)
+  descricao text [not null]
+  regra_negocio_critica text
+  nivel_acesso_leitura varchar(100) [not null]
+  nivel_acesso_escrita varchar(100) [not null]
+  atualizado_em timestamp [default: `now()`]
+
+  Note: 'Dicionário de dados vivo e governança LGPD'
+}
+
+Table sc_auditoria.tb_auditoria_log {
+  id uuid [pk, default: `gen_random_uuid()`]
+  empresa_id uuid
+  tabela_afetada varchar(100) [not null]
+  operacao varchar(10) [not null]
+  usuario_db varchar(100) [not null]
+  dados_antigos jsonb
+  dados_novos jsonb
+  data_hora timestamptz [default: `now()`]
+
+  Note: 'Trilha de auditoria detalhada via trigger com mascaramento de senhas'
+}
+
+Table sc_auditoria.tb_monitoramento_dau {
+  id uuid [pk, default: `gen_random_uuid()`]
+  usuario_id uuid [not null]
+  data_acesso date [not null, default: `CURRENT_DATE`]
+
+  Note: 'Métricas de Daily Active Users (DAU) no aplicativo'
+}
+
+// ==============================================================================
+// 6. RELACIONAMENTOS (FOREIGN KEYS)
+// ==============================================================================
+
+// Corporativo
+Ref: sc_corporativo.tb_empresa.endereco_id > sc_corporativo.tb_endereco.id [delete: restrict]
+Ref: sc_corporativo.tb_configuracao_operacao.empresa_id - sc_corporativo.tb_empresa.id [delete: cascade] // 1:1
+Ref: sc_corporativo.tb_usuario.empresa_id > sc_corporativo.tb_empresa.id [delete: cascade]
+
+Ref: sc_corporativo.tb_fazenda.empresa_id > sc_corporativo.tb_empresa.id [delete: cascade]
+Ref: sc_corporativo.tb_fazenda.pecuarista_id > sc_corporativo.tb_usuario.id [delete: restrict]
+Ref: sc_corporativo.tb_fazenda.endereco_id > sc_corporativo.tb_endereco.id [delete: restrict]
+
+Ref: sc_corporativo.tb_unidade_frigorifica.empresa_id > sc_corporativo.tb_empresa.id [delete: cascade]
+Ref: sc_corporativo.tb_unidade_frigorifica.analista_id > sc_corporativo.tb_usuario.id [delete: restrict]
+Ref: sc_corporativo.tb_unidade_frigorifica.endereco_id > sc_corporativo.tb_endereco.id [delete: restrict]
+
+// Frota
+Ref: sc_frota.tb_veiculo_base.empresa_id > sc_corporativo.tb_empresa.id [delete: cascade]
+Ref: sc_frota.tb_veiculo_cavalo.empresa_id > sc_corporativo.tb_empresa.id [delete: cascade]
+Ref: sc_frota.tb_veiculo_carreta.empresa_id > sc_corporativo.tb_empresa.id [delete: cascade]
+
+// Operação - Relatório de Viagem (Diário de Rota)
+Ref: sc_operacao.tb_relatorio_viagem.empresa_id > sc_corporativo.tb_empresa.id [delete: restrict]
+Ref: sc_operacao.tb_relatorio_viagem.fazenda_id > sc_corporativo.tb_fazenda.id [delete: restrict]
+Ref: sc_operacao.tb_relatorio_viagem.motorista_id > sc_corporativo.tb_usuario.id [delete: restrict]
+Ref: sc_operacao.tb_relatorio_viagem.manobrista_id > sc_corporativo.tb_usuario.id [delete: restrict]
+Ref: sc_operacao.tb_relatorio_viagem.curraleiro_id > sc_corporativo.tb_usuario.id [delete: restrict]
+Ref: sc_operacao.tb_relatorio_viagem.cavalo_id > sc_frota.tb_veiculo_cavalo.id [delete: restrict]
+Ref: sc_operacao.tb_relatorio_viagem.carreta_id > sc_frota.tb_veiculo_carreta.id [delete: restrict]
+
+// Operação - Detalhes da Viagem
+Ref: sc_operacao.tb_parada_imprevista.relatorio_id > sc_operacao.tb_relatorio_viagem.id [delete: cascade]
+Ref: sc_operacao.tb_parada_imprevista.dominio_parada_id > sc_operacao.tb_dominio_motivo_parada.id [delete: restrict]
+
+Ref: sc_operacao.tb_anomalia_embarque.relatorio_id > sc_operacao.tb_relatorio_viagem.id [delete: cascade]
+Ref: sc_operacao.tb_anomalia_embarque.dominio_anomalia_id > sc_operacao.tb_dominio_anomalia.id [delete: restrict]
+
+Ref: sc_operacao.tb_anomalia_desembarque.relatorio_id > sc_operacao.tb_relatorio_viagem.id [delete: cascade]
+Ref: sc_operacao.tb_anomalia_desembarque.dominio_anomalia_id > sc_operacao.tb_dominio_anomalia.id [delete: restrict]
+
+Ref: sc_operacao.tb_auditoria_analise.relatorio_id > sc_operacao.tb_relatorio_viagem.id [delete: cascade]
+Ref: sc_operacao.tb_auditoria_analise.analista_id > sc_corporativo.tb_usuario.id [delete: restrict]
+
+Ref: sc_operacao.tb_outbox_evento.empresa_id > sc_corporativo.tb_empresa.id [delete: cascade]
+
+// Auditoria
+Ref: sc_auditoria.tb_monitoramento_dau.usuario_id > sc_corporativo.tb_usuario.id [delete: cascade]
+Ref: sc_auditoria.tb_auditoria_log.empresa_id > sc_corporativo.tb_empresa.id
+
+// ==============================================================================
+// 7. AGRUPAMENTOS VISUAIS (TABLE GROUPS)
+// ==============================================================================
+
+TableGroup sc_corporativo [color: #1E3A8A] {
+  sc_corporativo.tb_endereco
+  sc_corporativo.tb_empresa
+  sc_corporativo.tb_configuracao_operacao
+  sc_corporativo.tb_usuario
+  sc_corporativo.tb_fazenda
+  sc_corporativo.tb_unidade_frigorifica
+}
+
+TableGroup sc_frota [color: #047857] {
+  sc_frota.tb_veiculo_base
+  sc_frota.tb_veiculo_cavalo
+  sc_frota.tb_veiculo_carreta
+}
+
+TableGroup sc_operacao [color: #B45309] {
+  sc_operacao.tb_relatorio_viagem
+  sc_operacao.tb_parada_imprevista
+  sc_operacao.tb_anomalia_embarque
+  sc_operacao.tb_anomalia_desembarque
+  sc_operacao.tb_auditoria_analise
+  sc_operacao.tb_dominio_motivo_parada
+  sc_operacao.tb_dominio_anomalia
+  sc_operacao.tb_outbox_evento
+}
+
+TableGroup sc_auditoria [color: #6D28D9] {
+  sc_auditoria.tb_catalogo_dados
+  sc_auditoria.tb_auditoria_log
+  sc_auditoria.tb_monitoramento_dau
+}
