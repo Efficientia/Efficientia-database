@@ -1,7 +1,6 @@
 /**
  * ==============================================================================
  * PROJETO EFFICIENTIA - BANCO DE DADOS CONVERSACIONAL (MONGODB)
- * Sprint 08 - MD-50 / EFFICIENTI-306
  * Arquivo: 02_indexes.js
  * Descrição: Criação de índices para otimização de consultas em tempo real,
  *            recuperação de contexto conversacional e observabilidade da IA.

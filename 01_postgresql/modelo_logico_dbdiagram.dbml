@@ -1,5 +1,5 @@
 // ==============================================================================
-// MODELO LÓGICO DE DADOS (POSTGRESQL)
+// PROJETO EFFICIENTIA - MODELO LÓGICO DE DADOS (POSTGRESQL)
 // Ferramenta: dbdiagram.io (DBML - Database Markup Language)
 // Descrição: Modelo Entidade-Relacionamento Lógico completo com todas as tabelas,
 //            chaves primárias, estrangeiras, tipos ENUM e agrupamentos por Schema.

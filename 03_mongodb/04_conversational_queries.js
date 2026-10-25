@@ -1,7 +1,6 @@
 /**
  * ==============================================================================
  * PROJETO EFFICIENTIA - BANCO DE DADOS CONVERSACIONAL (MONGODB)
- * Sprint 08 - MD-50 / EFFICIENTI-306
  * Arquivo: 04_conversational_queries.js
  * Descrição: Consultas operacionais e pipelines de agregação para suporte
  *            às interações da IA, observabilidade e inteligência de negócios.
