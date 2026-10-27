@@ -1,7 +1,6 @@
 /**
  * ==============================================================================
  * PROJETO EFFICIENTIA - BANCO DE DADOS CONVERSACIONAL (MONGODB)
- * Sprint 08 - MD-50 / EFFICIENTI-306
  * Arquivo: 01_schema_validation.js
  * Descrição: Criação das coleções "threads" e "messages" com validação
  *            rigorosa via $jsonSchema para armazenamento de interações da IA.

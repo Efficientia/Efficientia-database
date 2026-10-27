@@ -1,4 +1,15 @@
+-- ============================================================================
+-- EFFICIENTIA - DATALOAD: CATÁLOGO DE DADOS E GOVERNANÇA
+-- ============================================================================
+
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
 BEGIN;
+
+TRUNCATE TABLE sc_auditoria.tb_catalogo_dados;
 
 INSERT INTO sc_auditoria.tb_catalogo_dados
 (esquema_nome, tabela_nome, coluna_nome, descricao, regra_negocio_critica, nivel_acesso_leitura, nivel_acesso_escrita)

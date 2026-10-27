@@ -1,7 +1,6 @@
 /**
  * ==============================================================================
  * PROJETO EFFICIENTIA - BANCO DE DADOS CONVERSACIONAL (MONGODB)
- * Sprint 08 - MD-50 / EFFICIENTI-306
  * Arquivo: 03_seed_conversations.js
  * Descrição: Carga de dados iniciais (Seed) contendo threads de atendimento
  *            e histórico de mensagens trocadas com o Agente Orquestrador de IA.
