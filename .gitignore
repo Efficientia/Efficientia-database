@@ -1,4 +1,4 @@
-# Ambiente e Variáveis
+# Ambiente e Variaveis
 .env
 .env.*
 !.env.example
@@ -26,6 +26,7 @@ wheels/
 *.egg
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
 
 # Ambientes Virtuais
@@ -44,3 +45,28 @@ ENV/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Redis - Persistencia e despejos locais
+dump.rdb
+*.rdb
+*.aof
+appendonlydir/
+
+# Logs e arquivos temporarios
+*.log
+*.tmp
+*.bak
+*~
+
+# Arquivos compactados
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+
+# Scratch e scripts temporarios de desenvolvimento
+scratch/
+
+# Mockups e capturas temporarias avulsas na raiz
+exemplo design*.png
+screenshot*.png

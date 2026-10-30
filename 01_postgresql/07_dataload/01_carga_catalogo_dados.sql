@@ -9,7 +9,7 @@ SET client_min_messages = warning;
 
 BEGIN;
 
-TRUNCATE TABLE sc_auditoria.tb_catalogo_dados;
+-- Carga idempotente (ON CONFLICT DO UPDATE preserva metadados complementares e flags LGPD)
 
 INSERT INTO sc_auditoria.tb_catalogo_dados
 (esquema_nome, tabela_nome, coluna_nome, descricao, regra_negocio_critica, nivel_acesso_leitura, nivel_acesso_escrita)
@@ -287,7 +287,7 @@ VALUES
 ('sc_operacao', 'tb_relatorio_viagem', 'qtd_deitado', 'Gado fadigado/pisoteado mas vivo (Papel: Deitado).',
  'Indicador de falha no transporte ou estrada ruim.', 'conducao', 'conducao'),
 ('sc_operacao', 'tb_relatorio_viagem', 'qtd_morto', 'Gado sem vida (Papel: Morto).',
- 'Impacto financeiro, gera notificação para SIF (Serviço Inspecao Federal).', 'conducao', 'conducao'),
+ 'Impacto financeiro, gera notificação para SIF (Serviço de Inspeção Federal).', 'conducao', 'conducao'),
 ('sc_operacao', 'tb_relatorio_viagem', 'qtd_emergencia', 'Abate emergencial obrigatório (Papel: Emergência).',
  'Perda parcial da carcaça, exige SIF imediato.', 'conducao', 'conducao'),
 ('sc_operacao', 'tb_relatorio_viagem', 'url_laudo_mortalidade',
@@ -369,6 +369,12 @@ VALUES
 ('sc_operacao', 'tb_outbox_evento', 'criado_em', 'Timestamp exato de geração do evento no banco.', 'Ordenação sequencial de consumo.', 'auditoria', 'administrativo'),
 ('sc_operacao', 'tb_outbox_evento', 'processado_em', 'Timestamp em que o relay publicou o evento no Redis Stream.', 'Controle de idempotência e índice parcial.', 'auditoria', 'administrativo'),
 ('sc_operacao', 'tb_outbox_evento', 'erro_tentativas', 'Número de tentativas de publicação que falharam.', 'Detecção de Dead Letter Queue (DLQ).', 'auditoria', 'administrativo'),
-('sc_operacao', 'tb_outbox_evento', 'ultimo_erro', 'Stacktrace ou mensagem do último erro de publicação.', 'Diagnóstico de falhas de rede com o Upstash/Redis.', 'auditoria', 'administrativo');
+('sc_operacao', 'tb_outbox_evento', 'ultimo_erro', 'Stacktrace ou mensagem do último erro de publicação.', 'Diagnóstico de falhas de comunicação com o broker Redis.', 'auditoria', 'administrativo')
+ON CONFLICT (esquema_nome, tabela_nome, coluna_nome) DO UPDATE SET
+    descricao             = EXCLUDED.descricao,
+    regra_negocio_critica = EXCLUDED.regra_negocio_critica,
+    nivel_acesso_leitura  = EXCLUDED.nivel_acesso_leitura,
+    nivel_acesso_escrita  = EXCLUDED.nivel_acesso_escrita,
+    atualizado_em         = CURRENT_TIMESTAMP;
 
 COMMIT;

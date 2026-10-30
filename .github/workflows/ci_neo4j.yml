@@ -1,0 +1,52 @@
+name: CI - Neo4j
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**', 'chore/**' ]
+    paths:
+      - '04_neo4j/**'
+      - '.github/workflows/ci_neo4j.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '04_neo4j/**'
+      - '.github/workflows/ci_neo4j.yml'
+
+jobs:
+  test_neo4j:
+    name: Validar Constraints, Carga em Grafo e Consultas de Rastreabilidade
+    runs-on: ubuntu-latest
+
+    services:
+      neo4j:
+        image: neo4j:5.20-community
+        env:
+          NEO4J_AUTH: neo4j/efficientia123
+        ports:
+          - 7687:7687
+          - 7474:7474
+        options: >-
+          --health-cmd "cypher-shell -u neo4j -p efficientia123 'RETURN 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar cypher-shell
+        run: |
+          wget -qO - https://debian.neo4j.com/neotechnology.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/neo4j.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/neo4j.gpg] https://debian.neo4j.com stable latest" | sudo tee -a /etc/apt/sources.list.d/neo4j.list
+          sudo apt-get update
+          sudo apt-get install -y cypher-shell
+
+      - name: Executar bateria de testes com check_neo4j.sh
+        env:
+          NEO4J_URI: neo4j://localhost:7687
+          NEO4J_USER: neo4j
+          NEO4J_PASSWORD: efficientia123
+        run: |
+          chmod +x 04_neo4j/tests/check_neo4j.sh
+          ./04_neo4j/tests/check_neo4j.sh

@@ -19,14 +19,14 @@ logger = logging.getLogger("efficientia.main")
 
 
 def cmd_check():
-    """Testa conexões com o PostgreSQL e Upstash Redis."""
+    """Testa conexões com o PostgreSQL e o Redis."""
     from src.connection import test_connections
     logger.info("Testando conectividade dos bancos de dados...")
     results = test_connections()
 
     print("\n--- STATUS DAS CONEXÕES ---")
-    print(f"Redis (Upstash):    {'[OK] CONECTADO' if results['redis'] else '[FALHA] Não conectado'}")
-    print(f"PostgreSQL (Supabase): {'[OK] CONECTADO' if results['postgres'] else '[FALHA] Não conectado'}")
+    print(f"Redis:      {'[OK] CONECTADO' if results['redis'] else '[FALHA] Não conectado'}")
+    print(f"PostgreSQL: {'[OK] CONECTADO' if results['postgres'] else '[FALHA] Não conectado'}")
     print("---------------------------\n")
 
     if not all(results.values()):
@@ -86,13 +86,13 @@ def cmd_ranking(empresa_id: str, ano_mes: str):
     periodo = ano_mes or datetime.utcnow().strftime("%Y-%m")
 
     print(f"\n=======================================================")
-    print(f"📊 LEADERBOARDS EM TEMPO REAL - PERÍODO: {periodo}")
+    print(f"[LEADERBOARDS EM TEMPO REAL] PERÍODO: {periodo}")
     print(f"Empresa: {empresa_id}")
     print(f"=======================================================\n")
 
     # 1. Top Volume
     top_volume = leaderboard.get_top_volume(empresa_id, periodo, limit=5)
-    print("🏆 TOP 5 MOTORISTAS POR VOLUME TRANSPORTADO (Cabeças):")
+    print("[TOP 5 MOTORISTAS POR VOLUME TRANSPORTADO (Cabeças)]:")
     if not top_volume:
         print("  (Nenhum dado registrado para este período)")
     for item in top_volume:
@@ -101,7 +101,7 @@ def cmd_ranking(empresa_id: str, ano_mes: str):
     print("\n-------------------------------------------------------")
     # 2. Menor Mortalidade
     top_mortalidade = leaderboard.get_top_mortalidade(empresa_id, periodo, limit=5, menor_mortalidade_primeiro=True)
-    print("🌿 TOP 5 MOTORISTAS COM MENOR ÍNDICE DE MORTALIDADE:")
+    print("[TOP 5 MOTORISTAS COM MENOR ÍNDICE DE MORTALIDADE]:")
     if not top_mortalidade:
         print("  (Nenhum dado registrado para este período)")
     for item in top_mortalidade:
@@ -136,7 +136,7 @@ def main():
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Subcomando check
-    subparsers.add_parser("check", help="Testa conexões com Upstash e Supabase")
+    subparsers.add_parser("check", help="Testa conexões com Redis e PostgreSQL")
 
     # Subcomando relay
     subparsers.add_parser("relay", help="Inicia o Transactional Outbox Relay")

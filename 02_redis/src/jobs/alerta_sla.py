@@ -24,7 +24,7 @@ class AlertaEmergenciaJob(BaseJob):
 
         if qtd_emergencia > 0:
             logger.warning(
-                "⚠️ [ALERTA DE EMERGÊNCIA] Relatório %s (Empresa %s): %d cabeça(s) em estado de emergência! "
+                "[ALERTA DE EMERGÊNCIA] Relatório %s (Empresa %s): %d cabeça(s) em estado de emergência! "
                 "Prioridade máxima na recepção do curral do frigorífico para sangria imediata.",
                 relatorio_id,
                 empresa_id,

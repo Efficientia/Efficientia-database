@@ -1,0 +1,136 @@
+name: CI - PostgreSQL
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**', 'chore/**' ]
+    paths:
+      - '01_postgresql/**'
+      - '.github/workflows/ci_postgresql.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '01_postgresql/**'
+      - '.github/workflows/ci_postgresql.yml'
+
+jobs:
+  test_postgresql:
+    name: Validar DDL, Carga, Regras de Negocio e Testes Automatizados
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: efficientia
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar cliente do PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Executar DDLs estruturais (01_ddl)
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgrespassword
+          PGDATABASE: efficientia
+        run: |
+          for f in $(ls 01_postgresql/01_ddl/*.sql | sort); do
+            echo "Executando $f..."
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Executar Chaves e Indices (02_constraints_and_indexes)
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgrespassword
+          PGDATABASE: efficientia
+        run: |
+          for f in $(ls 01_postgresql/02_constraints_and_indexes/*.sql | sort); do
+            echo "Executando $f..."
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Executar Funcoes e Triggers (04_functions e 05_triggers)
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgrespassword
+          PGDATABASE: efficientia
+        run: |
+          for f in $(ls 01_postgresql/04_functions/*.sql | sort); do
+            echo "Executando $f..."
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+          for f in $(ls 01_postgresql/05_triggers/*.sql | sort); do
+            echo "Executando $f..."
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Executar Procedures e Visoes (06_procedures e 03_views)
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgrespassword
+          PGDATABASE: efficientia
+        run: |
+          for f in $(ls 01_postgresql/06_procedures/*.sql | sort); do
+            echo "Executando $f..."
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+          for f in $(ls 01_postgresql/03_views/*.sql | sort); do
+            echo "Executando $f..."
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Executar Carga Inicial de Dados (07_dataload)
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgrespassword
+          PGDATABASE: efficientia
+        run: |
+          for f in $(ls 01_postgresql/07_dataload/*.sql | sort); do
+            echo "Carregando $f..."
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Executar Verificacao Formal de Normalizacao
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgrespassword
+          PGDATABASE: efficientia
+        run: |
+          psql -v ON_ERROR_STOP=1 -f 01_postgresql/docs/verificacao_normalizacao.sql
+
+      - name: Executar Bateria de Testes Automatizados (10_tests)
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgrespassword
+          PGDATABASE: efficientia
+        run: |
+          chmod +x 01_postgresql/10_tests/check_postgresql.sh
+          ./01_postgresql/10_tests/check_postgresql.sh

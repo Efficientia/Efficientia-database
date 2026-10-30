@@ -1,7 +1,7 @@
 """Cache de parametrizações operacionais corporativas no Redis.
 
 Reduz a latência de consultas recorrentes a sc_corporativo.tb_configuracao_operacao
-(como tempo máximo de viagem, bloqueio por mortes e SLAs) de ~40ms no Supabase
+(como tempo máximo de viagem, bloqueio por mortes e SLAs) de ~40ms no banco relacional
 para <2ms no Redis em memória.
 """
 
