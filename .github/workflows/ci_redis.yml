@@ -1,0 +1,54 @@
+name: CI - Redis
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**', 'chore/**' ]
+    paths:
+      - '02_redis/**'
+      - '.github/workflows/ci_redis.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '02_redis/**'
+      - '.github/workflows/ci_redis.yml'
+
+jobs:
+  test_redis:
+    name: Validar Configuracao, Scripts Lua, Cache e Rankings
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r 02_redis/requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Executar bateria de testes com pytest
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: ""
+          APP_ENV: test
+        run: |
+          pytest -v 02_redis/tests/

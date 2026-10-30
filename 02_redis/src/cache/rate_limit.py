@@ -46,7 +46,7 @@ class RateLimiter:
 
         if contador > max_requisicoes:
             logger.warning(
-                "🛑 [RATE LIMIT EXCEDIDO] Usuário %s atingiu %d requisições (limite: %d/%ds).",
+                "[RATE LIMIT EXCEDIDO] Usuário %s atingiu %d requisições (limite: %d/%ds).",
                 usuario_id,
                 contador,
                 max_requisicoes,

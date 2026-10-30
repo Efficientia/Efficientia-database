@@ -1,0 +1,57 @@
+name: CI - MongoDB
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**', 'chore/**' ]
+    paths:
+      - '03_mongodb/**'
+      - '.github/workflows/ci_mongodb.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '03_mongodb/**'
+      - '.github/workflows/ci_mongodb.yml'
+
+jobs:
+  test_mongodb:
+    name: Validar Validacao de Esquema, Indices e Consultas
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Mongosh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg
+          wget -qO- https://www.mongodb.org/static/pgp/server-7.0.asc | sudo tee /etc/apt/trusted.gpg.d/server-7.0.asc
+          echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+          sudo apt-get update
+          sudo apt-get install -y mongodb-mongosh
+
+      - name: Executar Esquema e Validacao (01_schema_validation.js)
+        run: |
+          mongosh "mongodb://localhost:27017/efficientia_ai" 03_mongodb/01_schema_validation.js
+
+      - name: Executar Indices (02_indexes.js)
+        run: |
+          mongosh "mongodb://localhost:27017/efficientia_ai" 03_mongodb/02_indexes.js
+
+      - name: Executar Carga Semilla (03_seed_conversations.js)
+        run: |
+          mongosh "mongodb://localhost:27017/efficientia_ai" 03_mongodb/03_seed_conversations.js
+
+      - name: Executar Consultas Conversacionais (04_conversational_queries.js)
+        run: |
+          mongosh "mongodb://localhost:27017/efficientia_ai" 03_mongodb/04_conversational_queries.js
+
+      - name: Executar Teste Automatizado de Validacao (tests/check_mongodb.js)
+        run: |
+          mongosh "mongodb://localhost:27017/efficientia_ai" 03_mongodb/tests/check_mongodb.js

@@ -5,8 +5,7 @@ BEGIN;
 -- ==============================================================================
 
 -- Dimensão de Empresas
-CREATE
-OR REPLACE VIEW sc_corporativo.vw_dim_empresa AS
+CREATE OR REPLACE VIEW sc_corporativo.vw_dim_empresa AS
 SELECT id   AS sk_empresa,
        nome AS nome_empresa,
        cnpj AS cnpj_empresa,
@@ -14,8 +13,7 @@ SELECT id   AS sk_empresa,
 FROM sc_corporativo.tb_empresa;
 
 -- Dimensão de Colaboradores (Motoristas, Analistas, etc.)
-CREATE
-OR REPLACE VIEW sc_corporativo.vw_dim_colaborador AS
+CREATE OR REPLACE VIEW sc_corporativo.vw_dim_colaborador AS
 SELECT id            AS sk_colaborador,
        empresa_id    AS fk_empresa,
        nome_completo AS nome,
@@ -26,8 +24,7 @@ SELECT id            AS sk_colaborador,
 FROM sc_corporativo.tb_usuario;
 
 -- Dimensão de Frota (Unificando Cavalo e Carreta)
-CREATE
-OR REPLACE VIEW sc_frota.vw_dim_frota AS
+CREATE OR REPLACE VIEW sc_frota.vw_dim_frota AS
 SELECT id         AS sk_veiculo,
        empresa_id AS fk_empresa,
        placa,
@@ -40,8 +37,7 @@ SELECT id         AS sk_veiculo,
 FROM sc_frota.tb_veiculo_base;
 
 -- Dimensão Unificada de Localidades (Origens e Destinos)
-CREATE
-OR REPLACE VIEW sc_corporativo.vw_dim_localidade AS
+CREATE OR REPLACE VIEW sc_corporativo.vw_dim_localidade AS
 SELECT id         AS sk_localidade,
        empresa_id AS fk_empresa,
        nome       AS nome_local,
@@ -60,8 +56,7 @@ FROM sc_corporativo.tb_unidade_frigorifica;
 -- 2. CAMADA FATO (TRANSFORMAÇÃO E ETL VIA CTE)
 -- ==============================================================================
 
-CREATE
-OR REPLACE VIEW sc_operacao.vw_fato_transporte_animal AS
+CREATE OR REPLACE VIEW sc_operacao.vw_fato_transporte_animal AS
 WITH cte_paradas_consolidadas AS (
     SELECT
         relatorio_id,
@@ -137,8 +132,7 @@ WHERE r.status IN ('pendente', 'aprovado');
 -- ==============================================================================
 -- 3. VIEWS MATERIALIZADAS (CÁLCULOS ANALÍTICOS AVANÇADOS / WINDOW FUNCTIONS)
 -- ==============================================================================
-CREATE
-MATERIALIZED VIEW sc_operacao.mv_analise_mortalidade_mensal AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS sc_operacao.mv_analise_mortalidade_mensal AS
 SELECT fk_empresa,
     fk_origem,
     fk_motorista,
@@ -153,7 +147,7 @@ SELECT fk_empresa,
     )                                    AS taxa_mortalidade_percentual,
 
     -- Window Function 1: Running Total (Soma Acumulada) de mortes da empresa no ano
-    SUM(SUM(qtd_morto))                     OVER (
+    SUM(SUM(qtd_morto)) OVER (
         PARTITION BY fk_empresa, EXTRACT(YEAR FROM DATE_TRUNC('month', data_referencia))
         ORDER BY DATE_TRUNC('month', data_referencia)
     ) AS acumulado_mortes_ano,
@@ -171,7 +165,7 @@ GROUP BY fk_empresa,
          fk_motorista,
          DATE_TRUNC('month', data_referencia);
 
-CREATE UNIQUE INDEX uidx_mv_analise_mortalidade
+CREATE UNIQUE INDEX IF NOT EXISTS uidx_mv_analise_mortalidade
     ON sc_operacao.mv_analise_mortalidade_mensal (fk_empresa, fk_origem, fk_motorista, mes_referencia);
 
 COMMIT;

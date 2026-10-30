@@ -31,7 +31,7 @@ class AlertaMortalidadeJob(BaseJob):
         if qtd_morto > 0:
             taxa = (qtd_morto / total_embarcados * 100) if total_embarcados > 0 else 0.0
             logger.warning(
-                "🚨 [ALERTA DE MORTALIDADE] Relatório %s (Empresa %s): %d óbito(s) de animal registrado(s)! "
+                "[ALERTA DE MORTALIDADE] Relatório %s (Empresa %s): %d óbito(s) de animal registrado(s)! "
                 "Taxa de mortalidade na viagem: %.2f%%. Ação requerida: retenção para laudo veterinário SIF.",
                 relatorio_id,
                 empresa_id,
@@ -39,6 +39,6 @@ class AlertaMortalidadeJob(BaseJob):
                 taxa,
             )
         else:
-            logger.info("✅ Relatório %s com 100%% de sobrevivência animal (0 mortes).", relatorio_id)
+            logger.info("[INFO] Relatório %s com 100%% de sobrevivência animal (0 mortes).", relatorio_id)
 
         return True
