@@ -3,7 +3,7 @@ BEGIN;
 -- ==============================================================================
 -- 1. TABELAS CORPORATIVAS BASE
 -- ==============================================================================
-CREATE TABLE sc_corporativo.tb_endereco
+CREATE TABLE IF NOT EXISTS sc_corporativo.tb_endereco
 (
     id         UUID DEFAULT gen_random_uuid(),
     cep        VARCHAR(10)  NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE sc_corporativo.tb_endereco
     CONSTRAINT pk_endereco PRIMARY KEY (id)
 );
 
-CREATE TABLE sc_corporativo.tb_empresa
+CREATE TABLE IF NOT EXISTS sc_corporativo.tb_empresa
 (
     id             UUID DEFAULT gen_random_uuid(),
     endereco_id    UUID        NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE sc_corporativo.tb_empresa
     CONSTRAINT fk_empresa_endereco FOREIGN KEY (endereco_id) REFERENCES sc_corporativo.tb_endereco (id) ON DELETE RESTRICT
 );
 
-CREATE TABLE sc_corporativo.tb_configuracao_operacao
+CREATE TABLE IF NOT EXISTS sc_corporativo.tb_configuracao_operacao
 (
     id                             UUID                   DEFAULT gen_random_uuid(),
     empresa_id                     UUID          NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE sc_corporativo.tb_configuracao_operacao
     CONSTRAINT ck_config_meta_mortalidade CHECK (meta_mortalidade >= 0 AND meta_mortalidade <= 100)
 );
 
-CREATE TABLE sc_corporativo.tb_usuario
+CREATE TABLE IF NOT EXISTS sc_corporativo.tb_usuario
 (
     id                   UUID                                    DEFAULT gen_random_uuid(),
     empresa_id           UUID                           NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE sc_corporativo.tb_usuario
     CONSTRAINT fk_usuario_empresa FOREIGN KEY (empresa_id) REFERENCES sc_corporativo.tb_empresa (id) ON DELETE CASCADE
 );
 
-CREATE TABLE sc_auditoria.tb_monitoramento_dau
+CREATE TABLE IF NOT EXISTS sc_auditoria.tb_monitoramento_dau
 (
     id          UUID          DEFAULT gen_random_uuid(),
     usuario_id  UUID NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE sc_auditoria.tb_monitoramento_dau
 -- ==============================================================================
 -- 2. TABELAS DOMÍNIO
 -- ==============================================================================
-CREATE TABLE sc_operacao.tb_dominio_motivo_parada
+CREATE TABLE IF NOT EXISTS sc_operacao.tb_dominio_motivo_parada
 (
     id        UUID    DEFAULT gen_random_uuid(),
     codigo    VARCHAR(50)  NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE sc_operacao.tb_dominio_motivo_parada
     CONSTRAINT uk_dominio_parada_codigo UNIQUE (codigo)
 );
 
-CREATE TABLE sc_operacao.tb_dominio_anomalia
+CREATE TABLE IF NOT EXISTS sc_operacao.tb_dominio_anomalia
 (
     id         UUID    DEFAULT gen_random_uuid(),
     tipo_etapa VARCHAR(20)  NOT NULL, -- 'EMBARQUE' ou 'DESEMBARQUE'
@@ -111,7 +111,7 @@ CREATE TABLE sc_operacao.tb_dominio_anomalia
 -- ==============================================================================
 -- 3. FROTA
 -- ==============================================================================
-CREATE TABLE sc_frota.tb_veiculo_base
+CREATE TABLE IF NOT EXISTS sc_frota.tb_veiculo_base
 (
     id                       UUID    DEFAULT gen_random_uuid(),
     empresa_id               UUID       NOT NULL,
@@ -123,7 +123,7 @@ CREATE TABLE sc_frota.tb_veiculo_base
     CONSTRAINT fk_veiculo_base_empresa FOREIGN KEY (empresa_id) REFERENCES sc_corporativo.tb_empresa (id) ON DELETE CASCADE
 );
 
-CREATE TABLE sc_frota.tb_veiculo_cavalo
+CREATE TABLE IF NOT EXISTS sc_frota.tb_veiculo_cavalo
 (
     km_acumulado INTEGER NOT NULL DEFAULT 0,
     CONSTRAINT pk_veiculo_cavalo PRIMARY KEY (id),
@@ -131,7 +131,7 @@ CREATE TABLE sc_frota.tb_veiculo_cavalo
     CONSTRAINT fk_veiculo_cavalo_empresa FOREIGN KEY (empresa_id) REFERENCES sc_corporativo.tb_empresa (id) ON DELETE CASCADE
 ) INHERITS (sc_frota.tb_veiculo_base);
 
-CREATE TABLE sc_frota.tb_veiculo_carreta
+CREATE TABLE IF NOT EXISTS sc_frota.tb_veiculo_carreta
 (
     capacidade_cabecas INTEGER NOT NULL,
     CONSTRAINT pk_veiculo_carreta PRIMARY KEY (id),
@@ -143,7 +143,7 @@ CREATE TABLE sc_frota.tb_veiculo_carreta
 -- ==============================================================================
 -- 4. ENTIDADES RELACIONAIS
 -- ==============================================================================
-CREATE TABLE sc_corporativo.tb_fazenda
+CREATE TABLE IF NOT EXISTS sc_corporativo.tb_fazenda
 (
     id            UUID DEFAULT gen_random_uuid(),
     empresa_id    UUID         NOT NULL,
@@ -159,7 +159,7 @@ CREATE TABLE sc_corporativo.tb_fazenda
     CONSTRAINT fk_fazenda_endereco FOREIGN KEY (endereco_id) REFERENCES sc_corporativo.tb_endereco (id) ON DELETE RESTRICT
 );
 
-CREATE TABLE sc_corporativo.tb_unidade_frigorifica
+CREATE TABLE IF NOT EXISTS sc_corporativo.tb_unidade_frigorifica
 (
     id          UUID                  DEFAULT gen_random_uuid(),
     empresa_id  UUID         NOT NULL,

@@ -2,7 +2,7 @@
 
 Lê eventos pendentes da tabela sc_operacao.tb_outbox_evento no PostgreSQL com
 bloqueio não-bloqueante (FOR UPDATE SKIP LOCKED) e os encaminha de forma confiável
-para os Redis Streams da respectiva empresa no Upstash.
+para os Redis Streams da respectiva empresa.
 """
 
 import json

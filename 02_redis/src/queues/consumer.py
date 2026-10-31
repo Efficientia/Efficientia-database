@@ -1,7 +1,7 @@
 """Consumidor de Filas com Redis Streams e Consumer Groups.
 
 Garante entrega confiável (At-least-once), confirmação explícita de mensagens (XACK),
-bloqueio com timeout (XREADGROUP com BLOCK) para economia de quota no Upstash,
+bloqueio com timeout (XREADGROUP com BLOCK) para economia de recursos e rede,
 e envio para Dead Letter Queue (DLQ) em caso de falhas consecutivas.
 """
 
@@ -66,7 +66,7 @@ class StreamConsumer:
         """Lê e processa um lote de mensagens pendentes do Consumer Group."""
         self.ensure_group()
 
-        # Leitura bloqueante (BLOCK) para evitar requisições contínuas ao Upstash
+        # Leitura bloqueante (BLOCK) para evitar requisições contínuas desnecessárias
         response = self.redis.xreadgroup(
             groupname=self.group_name,
             consumername=self.consumer_name,

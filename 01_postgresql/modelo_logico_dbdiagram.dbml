@@ -188,12 +188,13 @@ Table sc_operacao.tb_dominio_motivo_parada {
 
 Table sc_operacao.tb_dominio_anomalia {
   id uuid [pk, default: `gen_random_uuid()`]
+  anomalia_pai_id uuid
   tipo_etapa varchar(20) [not null, note: 'EMBARQUE ou DESEMBARQUE']
   codigo varchar(50) [not null]
   descricao varchar(150) [not null]
   ativo boolean [default: true]
 
-  Note: 'Tabela domínio de anomalias operacionais e físicas'
+  Note: 'Tabela domínio de anomalias com autorrelacionamento hierárquico (CTE recursiva)'
 }
 
 Table sc_operacao.tb_relatorio_viagem {
@@ -307,9 +308,26 @@ Table sc_auditoria.tb_catalogo_dados {
   regra_negocio_critica text
   nivel_acesso_leitura varchar(100) [not null]
   nivel_acesso_escrita varchar(100) [not null]
+  dado_pessoal_lgpd boolean [not null, default: false]
   atualizado_em timestamp [default: `now()`]
 
   Note: 'Dicionário de dados vivo e governança LGPD'
+}
+
+Table sc_auditoria.tb_historico_backup {
+  id uuid [pk, default: `gen_random_uuid()`]
+  operacao varchar(20) [not null, note: 'BACKUP, RESTORE ou RESTORE_AUDITORIA']
+  status varchar(20) [not null, note: 'SUCESSO ou FALHA']
+  nome_banco varchar(100) [not null]
+  arquivo_dump varchar(255)
+  tamanho_bytes bigint
+  checksum_sha256 char(64)
+  iniciado_em timestamptz [not null, default: `now()`]
+  finalizado_em timestamptz
+  executado_por varchar(100) [not null]
+  mensagem_erro text
+
+  Note: 'Registro oficial de backups físicos e recuperação de desastres'
 }
 
 Table sc_auditoria.tb_auditoria_log {
@@ -365,6 +383,7 @@ Ref: sc_operacao.tb_relatorio_viagem.cavalo_id > sc_frota.tb_veiculo_cavalo.id [
 Ref: sc_operacao.tb_relatorio_viagem.carreta_id > sc_frota.tb_veiculo_carreta.id [delete: restrict]
 
 // Operação - Detalhes da Viagem
+Ref: sc_operacao.tb_dominio_anomalia.anomalia_pai_id > sc_operacao.tb_dominio_anomalia.id [delete: restrict]
 Ref: sc_operacao.tb_parada_imprevista.relatorio_id > sc_operacao.tb_relatorio_viagem.id [delete: cascade]
 Ref: sc_operacao.tb_parada_imprevista.dominio_parada_id > sc_operacao.tb_dominio_motivo_parada.id [delete: restrict]
 
@@ -417,4 +436,5 @@ TableGroup sc_auditoria [color: #6D28D9] {
   sc_auditoria.tb_catalogo_dados
   sc_auditoria.tb_auditoria_log
   sc_auditoria.tb_monitoramento_dau
+  sc_auditoria.tb_historico_backup
 }

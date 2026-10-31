@@ -3,7 +3,7 @@ BEGIN;
 -- ==============================================================================
 -- 1. GOVERNANÇA E METADADOS
 -- ==============================================================================
-CREATE TABLE sc_auditoria.tb_catalogo_dados
+CREATE TABLE IF NOT EXISTS sc_auditoria.tb_catalogo_dados
 (
     id                    UUID        DEFAULT gen_random_uuid(),
     esquema_nome          VARCHAR(50) DEFAULT 'public',
@@ -17,7 +17,7 @@ CREATE TABLE sc_auditoria.tb_catalogo_dados
     CONSTRAINT pk_catalogo_dados PRIMARY KEY (id)
 );
 
-CREATE TABLE sc_auditoria.tb_auditoria_log
+CREATE TABLE IF NOT EXISTS sc_auditoria.tb_auditoria_log
 (
     id             UUID        DEFAULT gen_random_uuid(),
     empresa_id     UUID,

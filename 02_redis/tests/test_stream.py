@@ -35,6 +35,7 @@ class TestStreamConsumer(unittest.TestCase):
         event_payload = {
             "relatorio_id": str(uuid.uuid4()),
             "empresa_id": empresa_id,
+            "motorista_id": str(uuid.uuid4()),
             "status_novo": "aprovado",
             "qtd_morto": 1,
             "total_embarcados": 45,

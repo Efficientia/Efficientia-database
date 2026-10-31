@@ -3,7 +3,7 @@ BEGIN;
 -- ==============================================================================
 -- 1. DIÁRIO DE ROTA
 -- ==============================================================================
-CREATE TABLE sc_operacao.tb_relatorio_viagem
+CREATE TABLE IF NOT EXISTS sc_operacao.tb_relatorio_viagem
 (
     id                         UUID                                  DEFAULT gen_random_uuid(),
     empresa_id                 UUID                         NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE sc_operacao.tb_relatorio_viagem
 -- ==============================================================================
 -- 2. OPERAÇÃO
 -- ==============================================================================
-CREATE TABLE sc_operacao.tb_parada_imprevista
+CREATE TABLE IF NOT EXISTS sc_operacao.tb_parada_imprevista
 (
     id                UUID DEFAULT gen_random_uuid(),
     relatorio_id      UUID        NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE sc_operacao.tb_parada_imprevista
     CONSTRAINT ck_parada_datas CHECK (data_hora_fim > data_hora_inicio)
 );
 
-CREATE TABLE sc_operacao.tb_anomalia_embarque
+CREATE TABLE IF NOT EXISTS sc_operacao.tb_anomalia_embarque
 (
     id                  UUID DEFAULT gen_random_uuid(),
     relatorio_id        UUID NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE sc_operacao.tb_anomalia_embarque
     CONSTRAINT fk_ano_emb_dominio FOREIGN KEY (dominio_anomalia_id) REFERENCES sc_operacao.tb_dominio_anomalia (id) ON DELETE RESTRICT
 );
 
-CREATE TABLE sc_operacao.tb_anomalia_desembarque
+CREATE TABLE IF NOT EXISTS sc_operacao.tb_anomalia_desembarque
 (
     id                  UUID DEFAULT gen_random_uuid(),
     relatorio_id        UUID NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE sc_operacao.tb_anomalia_desembarque
     CONSTRAINT fk_ano_des_dominio FOREIGN KEY (dominio_anomalia_id) REFERENCES sc_operacao.tb_dominio_anomalia (id) ON DELETE RESTRICT
 );
 
-CREATE TABLE sc_operacao.tb_auditoria_analise
+CREATE TABLE IF NOT EXISTS sc_operacao.tb_auditoria_analise
 (
     id                UUID                 DEFAULT gen_random_uuid(),
     relatorio_id      UUID        NOT NULL,
@@ -119,7 +119,7 @@ CREATE TABLE sc_operacao.tb_auditoria_analise
 -- ==============================================================================
 -- 3. MENSAGERIA / EVENTOS ASSÍNCRONOS (TRANSACTIONAL OUTBOX)
 -- ==============================================================================
-CREATE TABLE sc_operacao.tb_outbox_evento
+CREATE TABLE IF NOT EXISTS sc_operacao.tb_outbox_evento
 (
     id              UUID         DEFAULT gen_random_uuid(),
     empresa_id      UUID         NOT NULL,

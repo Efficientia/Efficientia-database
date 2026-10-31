@@ -1,4 +1,4 @@
-"""Gerenciamento de conexões com Redis (Upstash) e PostgreSQL (Supabase)."""
+"""Gerenciamento de conexões com Redis e PostgreSQL."""
 
 import logging
 from typing import Optional
@@ -29,7 +29,7 @@ def get_redis_client() -> redis.Redis:
 
 
 def get_db_connection() -> psycopg.Connection:
-    """Retorna uma conexão ativa com o banco PostgreSQL / Supabase configurada com dict_row."""
+    """Retorna uma conexão ativa com o banco PostgreSQL configurada com dict_row."""
     return psycopg.connect(
         settings.database_url,
         row_factory=dict_row,
