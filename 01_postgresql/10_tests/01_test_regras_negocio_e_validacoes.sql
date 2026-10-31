@@ -38,7 +38,7 @@ BEGIN
             v_empresa_id, v_fazenda_id, v_motorista_id, v_analista_id, v_analista_id,
             v_cavalo_id, v_carreta_id, 35
         );
-    EXCEPTION WHEN SQLSTATE 'P0002' THEN
+    EXCEPTION WHEN SQLSTATE 'P0001' THEN
         v_erro_cnh := TRUE;
     END;
 

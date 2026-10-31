@@ -35,8 +35,8 @@ class AtualizarRankingJob(BaseJob):
         qtd_morto = int(payload.get("qtd_morto", 0))
 
         if not empresa_id or not motorista_id:
-            logger.error("Dados insuficientes no evento para atualizar ranking: %s", payload)
-            return False
+            logger.warning("Dados insuficientes no evento para atualizar ranking (evento ignorado): %s", payload)
+            return True
 
         stats = self.leaderboard.registrar_viagem_finalizada(
             empresa_id=empresa_id,
