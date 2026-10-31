@@ -1216,7 +1216,7 @@ svg.sel .g-node.prod.on .g-box{stroke:var(--brand);stroke-width:2;fill:var(--bra
             new_search_neo = """add('Neo4j', 'graph', 'Malha log\u00edstica e rastreabilidade', 'Modelagem em grafo: rastreamento de contatos indiretos, ve\u00edculos e rotas', '#/neo4j');
     [['Fazenda', 'n\u00f3 \u00b7 tb_propriedades_rurais'], ['Veiculo', 'n\u00f3 \u00b7 tb_veiculos'], ['Motorista', 'n\u00f3 \u00b7 tb_condutores'], ['Viagem', 'n\u00f3 \u00b7 tb_viagens'], ['UnidadeFrigorifica', 'n\u00f3 \u00b7 tb_unidades_frigorificas'], ['PARTIU_DE', 'relacionamento \u00b7 origem'], ['DESTINADA_A', 'relacionamento \u00b7 destino'], ['CONDUZIDA_POR', 'relacionamento \u00b7 condutor'], ['UTILIZOU_VEICULO', 'relacionamento \u00b7 implemento e trator']]
       .forEach(([n, sub]) => add('Neo4j', 'graph', n, sub, '#/neo4j', 'neo4j grafo'));
-    spec.content.split('\\n').forEach(l => { const h = l.match(/^#{2,3}\\s+(.+)$/); if (h) add('Neo4j', 'doc', h[1].replace(/[`*]/g, ''), '04_neo4j/README.md', `#/neo4j?h=${anchor(h[1])}`); })"""
+    spec.content.split('\\n').forEach(l => { const h = l.match(/^#{2,3}\\s+(.+)$/); if (h) add('Neo4j', 'doc', h[1].replace(/[`*]/g, ''), '04_neo4j/README.md', `#/neo4j?h=${slug(h[1])}`); })"""
             adapted_js = adapted_js[:idx_s1] + new_search_neo + adapted_js[idx_s2:]
 
     # 4. Neo4j - Substituicao completa do bloco legado da proposta
