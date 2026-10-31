@@ -173,15 +173,15 @@ $$;
 -- 2. REGISTRO PADRONIZADO DE EVENTOS DE BACKUP E RESTAURAÇÃO
 -- ==============================================================================
 CREATE OR REPLACE PROCEDURE sc_auditoria.sp_registrar_evento_backup(
-    p_operacao        VARCHAR(20),
-    p_status          VARCHAR(20),
-    p_nome_banco      VARCHAR(100),
-    p_arquivo_dump    VARCHAR(255) DEFAULT NULL,
-    p_tamanho_bytes   BIGINT       DEFAULT NULL,
-    p_checksum_sha256 CHAR(64)     DEFAULT NULL,
-    p_iniciado_em     TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP,
-    p_finalizado_em   TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP,
-    p_mensagem_erro   TEXT         DEFAULT NULL
+    p_operacao        VARCHAR,
+    p_status          VARCHAR,
+    p_nome_banco      VARCHAR,
+    p_arquivo_dump    VARCHAR     DEFAULT NULL,
+    p_tamanho_bytes   BIGINT      DEFAULT NULL,
+    p_checksum_sha256 VARCHAR     DEFAULT NULL,
+    p_iniciado_em     TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    p_finalizado_em   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    p_mensagem_erro   TEXT        DEFAULT NULL
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -371,15 +371,15 @@ BEGIN
 
     -- Registra a restauração cirúrgica no histórico oficial de recuperação
     CALL sc_auditoria.sp_registrar_evento_backup(
-        'RESTORE_AUDITORIA',
-        'SUCESSO',
-        current_database(),
-        'log_auditoria:' || p_log_id::TEXT,
+        'RESTORE_AUDITORIA'::VARCHAR,
+        'SUCESSO'::VARCHAR,
+        current_database()::VARCHAR,
+        ('log_auditoria:' || p_log_id::TEXT)::VARCHAR,
         octet_length(COALESCE(v_log.dados_antigos, v_log.dados_novos)::TEXT)::BIGINT,
-        NULL,
+        NULL::VARCHAR,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
-        NULL
+        NULL::TEXT
     );
 END;
 $$;
