@@ -242,7 +242,7 @@ sequenceDiagram
     App->>Redis: Verifica Rate Limit (INCR + TTL 60s) e lê SLA (Cache-Aside)
     Redis-->>App: Permissão concedida + Parâmetros operacionais
     App->>PG: INSERT/UPDATE em tb_relatorio_viagem (ou CALL sp_aprovar_relatorio)
-    Note over PG: Trigger BEFORE valida CNH e inspeções; Trigger AFTER grava auditoria JSONB e insere tb_outbox_evento na mesma transação ACID
+    Note over PG: Trigger BEFORE valida CNH e inspeções. Trigger AFTER grava auditoria JSONB e insere tb_outbox_evento na mesma transação ACID
     loop Polling Assíncrono Não Bloqueante
         Relay->>PG: SELECT ... FROM tb_outbox_evento FOR UPDATE SKIP LOCKED
         Relay->>Redis: XADD efficientia:{env}:{empresa_id}:stream:eventos
