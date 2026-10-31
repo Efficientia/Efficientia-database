@@ -26,9 +26,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 HTML = ROOT / "database-workspace.html"
-ZIP_HTML = ROOT / "scratch" / "zip_analysis" / "inventra-database-2-main" / "database-workspace.html"
-ALT_ZIP_HTML = Path(r"C:\Users\noecusiquispe-ieg\.gemini\antigravity\brain\19d715b3-1697-4a3a-88fa-c8cc8981adba\scratch\zip_analysis\inventra-database-2-main\database-workspace.html")
-
 START_TAG = '<script id="ws-data" type="application/json">'
 END_TAG = "<" + "/script>"
 
@@ -697,13 +694,7 @@ def build_workspace_html(output_path=None):
     target_path = Path(output_path) if output_path else HTML
 
     # Localiza o template base (prioriza o template pristine do zip se disponível)
-    template_source = None
-    if ZIP_HTML.exists():
-        template_source = ZIP_HTML
-    elif ALT_ZIP_HTML.exists():
-        template_source = ALT_ZIP_HTML
-    elif target_path.exists():
-        template_source = target_path
+    template_source = target_path if target_path.exists() else HTML
 
     if not template_source or not template_source.exists():
         raise FileNotFoundError("Template base do database-workspace.html não encontrado.")
@@ -1061,11 +1052,8 @@ svg.sel .g-node.prod.on .g-box{stroke:var(--brand);stroke-width:2;fill:var(--bra
     adapted_js = adapted_js.replace("'redis/config/redis.conf'", "'02_redis/config/redis.conf'")
     adapted_js = adapted_js.replace("FILES.get('redis/docs/KEYSPACE.md')", "FILES.get('02_redis/README.md')")
 
-    old_er_pref = "const ER_PREF = ['tb_profile', 'tb_user', 'tb_kitchen', 'tb_category', 'tb_measurement_unit', 'tb_product', 'tb_supplier', 'tb_requisition', 'tb_inventory'];"
-    new_er_pref = "const ER_PREF = ['tb_veiculos', 'tb_viagens', 'tb_trajetos', 'tb_telemetria_veicular_segundo_a_segundo', 'tb_paradas_operacionais', 'tb_anomalias_desembarque_passageiros', 'tb_condutores', 'tb_auditoria_sistema', 'tb_outbox_eventos', 'tb_catalog_table', 'tb_catalog_column'];"
-    adapted_js = adapted_js.replace(old_er_pref, new_er_pref)
 
-    adapted_js = adapted_js.replace("tb_user, tb_kitchen, V001…", "tb_veiculos, tb_viagens, tb_telemetria…")
+    # Legado removido
 
     prov_target = "Ai" + "ven"
     adapted_js = adapted_js.replace(prov_target + " for " + ("Val" + "key"), "Estrutura em Memória e Filas")
@@ -1137,7 +1125,7 @@ svg.sel .g-node.prod.on .g-box{stroke:var(--brand);stroke-width:2;fill:var(--bra
 
     # Route updates
     adapted_js = adapted_js.replace(
-        "document.title = `${title ? title + ' · ' : ''}Inventra Database Workspace`;",
+        "document.title = `${title ? title + ' · ' : ''}Efficientia Database Workspace`;",
         "document.title = `${title ? title + ' · ' : ''}Efficientia Database Workspace`;"
     )
     adapted_js = adapted_js.replace(
@@ -1185,10 +1173,11 @@ svg.sel .g-node.prod.on .g-box{stroke:var(--brand);stroke-width:2;fill:var(--bra
         )
         adapted_js = adapted_js[:idx_r1] + new_redis_hdr + adapted_js[idx_r2:]
 
-    adapted_js = adapted_js.replace(
-        "const ks = FILES.get('02_redis/README.md'); const fam = {};",
-        "const ks = FILES.get('02_redis/README.md'); const fam = {}; const FAM_NAMES = { ranking: 'Ranking de Efici\u00eancia Operacional', motorista: 'M\u00e9tricas do Condutor', ratelimit: 'Controle de Taxa', cache: 'Cache Corporativo', stream: 'Streams Operacionais', dlq: 'Dead Letter Queue' };"
-    )
+    if "const FAM_NAMES =" not in adapted_js:
+        adapted_js = adapted_js.replace(
+            "const ks = FILES.get('02_redis/README.md'); const fam = {};",
+            "const ks = FILES.get('02_redis/README.md'); const fam = {}; const FAM_NAMES = { ranking: 'Ranking de Efici\u00eancia Operacional', motorista: 'M\u00e9tricas do Condutor', ratelimit: 'Controle de Taxa', cache: 'Cache Corporativo', stream: 'Streams Operacionais', dlq: 'Dead Letter Queue' };"
+        )
     adapted_js = adapted_js.replace(
         "esc(fam[f] || f)",
         "esc(fam[f] || (typeof FAM_NAMES !== 'undefined' && FAM_NAMES[f]) || f)"
@@ -1214,7 +1203,7 @@ svg.sel .g-node.prod.on .g-box{stroke:var(--brand);stroke-width:2;fill:var(--bra
         idx_s2 = adapted_js.find(";\n  }", idx_s1)
         if idx_s2 != -1:
             new_search_neo = """add('Neo4j', 'graph', 'Malha log\u00edstica e rastreabilidade', 'Modelagem em grafo: rastreamento de contatos indiretos, ve\u00edculos e rotas', '#/neo4j');
-    [['Fazenda', 'n\u00f3 \u00b7 tb_propriedades_rurais'], ['Veiculo', 'n\u00f3 \u00b7 tb_veiculos'], ['Motorista', 'n\u00f3 \u00b7 tb_condutores'], ['Viagem', 'n\u00f3 \u00b7 tb_viagens'], ['UnidadeFrigorifica', 'n\u00f3 \u00b7 tb_unidades_frigorificas'], ['PARTIU_DE', 'relacionamento \u00b7 origem'], ['DESTINADA_A', 'relacionamento \u00b7 destino'], ['CONDUZIDA_POR', 'relacionamento \u00b7 condutor'], ['UTILIZOU_VEICULO', 'relacionamento \u00b7 implemento e trator']]
+    [['Fazenda', 'n\u00f3 \u00b7 tb_fazenda'], ['Veiculo', 'n\u00f3 \u00b7 tb_veiculo_base'], ['Motorista', 'n\u00f3 \u00b7 tb_usuario'], ['Viagem', 'n\u00f3 \u00b7 tb_relatorio_viagem'], ['UnidadeFrigorifica', 'n\u00f3 \u00b7 tb_unidade_frigorifica'], ['PARTIU_DE', 'relacionamento \u00b7 origem'], ['DESTINADA_A', 'relacionamento \u00b7 destino'], ['CONDUZIDA_POR', 'relacionamento \u00b7 condutor'], ['UTILIZOU_VEICULO', 'relacionamento \u00b7 implemento e cavalo']]
       .forEach(([n, sub]) => add('Neo4j', 'graph', n, sub, '#/neo4j', 'neo4j grafo'));
     spec.content.split('\\n').forEach(l => { const h = l.match(/^#{2,3}\\s+(.+)$/); if (h) add('Neo4j', 'doc', h[1].replace(/[`*]/g, ''), '04_neo4j/README.md', `#/neo4j?h=${slug(h[1])}`); })"""
             adapted_js = adapted_js[:idx_s1] + new_search_neo + adapted_js[idx_s2:]
@@ -1367,7 +1356,7 @@ function pageNeo4j(params) {
 
   const tests = files.filter(f => f.path.startsWith('04_neo4j/tests/') || f.path.startsWith('neo4j/tests/'));
   const pipelineTab = `<div class=\"grid g3\">
-      <div class=\"card card-pad\"><h3 style=\"font-size:15px\">1. PostgreSQL Outbox</h3><p class=\"small muted\" style=\"margin-top:6px\">Eventos gravados na <code class=\"ic\">tb_outbox_eventos</code> com status <code class=\"ic\">PENDENTE</code> durante a transa\u00e7\u00e3o operacional.</p></div>
+      <div class=\"card card-pad\"><h3 style=\"font-size:15px\">1. PostgreSQL Outbox</h3><p class=\"small muted\" style=\"margin-top:6px\">Eventos gravados na <code class=\"ic\">tb_outbox_evento</code> com status <code class=\"ic\">PENDENTE</code> durante a transa\u00e7\u00e3o operacional.</p></div>
       <div class=\"card card-pad\"><h3 style=\"font-size:15px\">2. Relay & Mensageria</h3><p class=\"small muted\" style=\"margin-top:6px\">Processador l\u00ea eventos do outbox e encaminha via Redis Streams para a esteira ass\u00edncrona de proje\u00e7\u00e3o.</p></div>
       <div class=\"card card-pad\"><h3 style=\"font-size:15px\">3. Materializa\u00e7\u00e3o no Grafo</h3><p class=\"small muted\" style=\"margin-top:6px\">Scripts Cypher idempotentes aplicam <code class=\"ic\">MERGE</code> com chaves de neg\u00f3cio \u00fanicas (GTA, CNH, Placa).</p></div>
     </div>
@@ -1463,6 +1452,45 @@ function initNeo4j() {
         return obj
 
     data_payload = sanitize_neutrality(data_payload)
+
+    # Padronizacao de termos, exemplos e rotulagens do frontend
+    adapted_js = re.sub(
+        r"const ER_PREF = \[.*?\];",
+        "const ER_PREF = ['tb_empresa', 'tb_configuracao_operacao', 'tb_usuario', 'tb_endereco', 'tb_fazenda', 'tb_unidade_frigorifica', 'tb_veiculo_base', 'tb_veiculo_cavalo', 'tb_veiculo_carreta', 'tb_relatorio_viagem', 'tb_dominio_motivo_parada', 'tb_parada_imprevista', 'tb_dominio_anomalia', 'tb_anomalia_embarque', 'tb_anomalia_desembarque', 'tb_auditoria_analise', 'tb_outbox_evento', 'tb_catalogo_dados', 'tb_auditoria_log', 'tb_monitoramento_dau', 'tb_historico_backup'];",
+        adapted_js
+    )
+    adapted_js = re.sub(
+        r'Ex\.: <code class="ic">[^<]+</code>, <code class="ic">[^<]+</code>, <code class="ic">[^<]+</code>, <code class="ic">[^<]+</code>',
+        'Ex.: <code class="ic">tb_relatorio_viagem</code>, <code class="ic">sp_aprovar_relatorio</code>, <code class="ic">cnh_numero</code>, <code class="ic">stream:eventos</code>',
+        adapted_js
+    )
+    # Substitui regex do highlight de chaves redis por chave eficiente
+    adapted_js = re.sub(
+        r"/\(\?:[a-zA-Z0-9_|]+\)\(\?::\[\\w{}<>.-]\+\)\+/, 'key'",
+        lambda m: "/(?:efficientia)(?::[\\w{}<>.-]+)+/, 'key'",
+        adapted_js
+    )
+    adapted_js = re.sub(
+        r"download\('[^']*?dicionario_de_dados\.csv',",
+        "download('efficientia_dicionario_de_dados.csv',",
+        adapted_js
+    )
+    adapted_js = re.sub(
+        r'Linha tracejada é <b>herança</b> \(tabelas <code class="ic">tb_log_\*</code> herdam de <code class="ic">tb_log_base</code>\)\.',
+        'Linha tracejada é <b>herança</b> (tabelas <code class="ic">tb_veiculo_cavalo</code> e <code class="ic">tb_veiculo_carreta</code> herdam de <code class="ic">tb_veiculo_base</code>).',
+        adapted_js
+    )
+    adapted_js = re.sub(
+        r'Classificação do catálogo de dados \(<code class="ic">tb_catalog_table\.domain</code>\)\.',
+        'Classificação do catálogo de dados (<code class="ic">tb_catalogo_dados.dominio</code>).',
+        adapted_js
+    )
+    adapted_js = re.sub(
+        r"document\.title = `\${title \? title \+ ' [·] ' : ''}[^`]*?Database Workspace`;",
+        "document.title = `${title ? title + ' · ' : ''}Efficientia Database Workspace`;",
+        adapted_js
+    )
+
 
     json_str = json.dumps(data_payload, ensure_ascii=False, separators=(",", ":")).replace("<", r"\u003c")
 
