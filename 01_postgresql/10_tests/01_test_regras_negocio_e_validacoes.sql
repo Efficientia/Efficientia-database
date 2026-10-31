@@ -83,8 +83,6 @@ BEGIN
     CALL sc_operacao.sp_aprovar_relatorio(
         v_relatorio_id,
         v_analista_id,
-        TRUE,
-        NULL,
         'Aprovação automática no teste de integridade.'
     );
 

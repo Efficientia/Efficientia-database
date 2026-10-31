@@ -17,13 +17,13 @@ BEGIN
     SELECT id INTO v_usuario_id FROM sc_corporativo.tb_usuario WHERE empresa_id = v_empresa_id LIMIT 1;
 
     -- 1. Teste de registro de Daily Active User (DAU)
-    CALL sc_auditoria.fn_registrar_dau(v_usuario_id);
+    PERFORM sc_auditoria.fn_registrar_acesso_diario(v_usuario_id);
 
     IF NOT EXISTS (
         SELECT 1 FROM sc_auditoria.tb_monitoramento_dau
          WHERE usuario_id = v_usuario_id AND data_acesso = CURRENT_DATE
     ) THEN
-        RAISE EXCEPTION 'Falha no teste: fn_registrar_dau não gravou o acesso diário.';
+        RAISE EXCEPTION 'Falha no teste: fn_registrar_acesso_diario não gravou o acesso diário.';
     END IF;
 
     -- 2. Teste de auditoria automática em alteração de parâmetros operacionais

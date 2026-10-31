@@ -77,6 +77,16 @@ VALUES (p_usuario_id,
 END;
 $$;
 
+CREATE OR REPLACE PROCEDURE sc_auditoria.fn_registrar_dau(
+    p_usuario_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    PERFORM sc_auditoria.fn_registrar_acesso_diario(p_usuario_id);
+END;
+$$;
+
 COMMIT;
 
 BEGIN;
