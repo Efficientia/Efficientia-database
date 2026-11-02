@@ -408,6 +408,20 @@ flowchart TB
 │   ├── 03_test_auditoria_dau_e_recuperacao.sql   # Testes de auditoria, registro DAU e restore cirurgico
 │   └── check_postgresql.sh                       # Executor bash automatizado das baterias
 │
+├── 11_rpa/                                       # RPA de sincronizacao bidirecional e reconciliacao
+│   ├── config.py                                 # Configuracoes de ambiente e conexoes DB1/DB2
+│   ├── database.py                               # Sessoes, pools de conexao e gerenciadores transacionais
+│   ├── models.py                                 # Modelos SQLAlchemy para DB1, DB2 e tabela de auditoria
+│   ├── mapper.py                                 # Normalizacao de CPF/CNPJ, geracao de hash SHA-256 e de-para
+│   ├── syncer.py                                 # Motor de reconciliacao bidirecional e resolucao de chaves
+│   ├── init_schemas.py                           # Criacao de tabelas e carga de homologacao
+│   ├── main.py                                   # Interface de linha de comando CLI (run, daemon, stats, etc.)
+│   ├── requirements.txt                          # Dependencias de execucao (SQLAlchemy, psycopg2, pytest)
+│   ├── Dockerfile                                # Conteinerizacao para execucao continua
+│   ├── docker-compose.yml                        # Orquestracao do servico e bancos locais de teste
+│   ├── README.md                                 # Guia completo da CLI e matriz de transformacao
+│   └── tests/                                    # Suite de testes automatizados com pytest (13 cenarios)
+│
 └── docs/                                         # Documentacao tecnica complementar
     ├── NORMALIZACAO.md                           # Prova formal de 1FN a 5FN por entidade
     ├── verificacao_normalizacao.sql              # Script SQL de validacao de integridade relacional
@@ -590,3 +604,72 @@ Graças ao índice único `uidx_mv_analise_mortalidade`, o comando executa sem b
 * O script `01_postgresql/08_backup/backup.sh` deve ser configurado em agendador diário para garantir conformidade com o RPO estabelecido de 24 horas.
 * O catálogo de dados deve ser mantido sincronizado executando `CALL sc_auditoria.sp_sincronizar_catalogo_dados(FALSE)` após qualquer alteração estrutural no banco.
 * As evidências de otimização detalhadas e a prova matemática de normalização encontram-se documentadas em [NORMALIZACAO.md](file:///c:/Users/noecusiquispe-ieg/OneDrive%20-%20Instituto%20J&F/%C3%81rea%20de%20Trabalho/Modelagem%20de%20Dados/Efficientia-database/01_postgresql/docs/NORMALIZACAO.md), [OTIMIZACAO_EXPLAIN_ANALYZE.md](file:///c:/Users/noecusiquispe-ieg/OneDrive%20-%20Instituto%20J&F/%C3%81rea%20de%20Trabalho/Modelagem de Dados/Efficientia-database/01_postgresql/docs/OTIMIZACAO_EXPLAIN_ANALYZE.md) e [BACKUP_E_RECUPERACAO.md](file:///c:/Users/noecusiquispe-ieg/OneDrive%20-%20Instituto%20J&F/%C3%81rea%20de%20Trabalho/Modelagem%20de%20Dados/Efficientia-database/01_postgresql/docs/BACKUP_E_RECUPERACAO.md).
+
+
+---
+
+## 9. RPA de Sincronizacao Bidirecional (11_rpa)
+
+O modulo `01_postgresql/11_rpa` implementa um mecanismo autonomo de automacao de processos (RPA) em Python para sincronizacao continua e bidirecional de dados cadastrais entre duas instancias PostgreSQL do ecossistema Efficientia:
+
+* **Instancia Operacional (DB1):** Contem a estrutura de logistica operacional com as tabelas `empresa` e `motorista` (identificadores `SERIAL`).
+* **Instancia Corporativa (DB2):** Contem a estrutura corporativa canonica com as tabelas `sc_corporativo.tb_empresa` e `sc_corporativo.tb_usuario` (identificadores `UUID`).
+
+### 9.1 Arquitetura e Principios de Integridade
+
+1. **Idempotencia por Hash Criptografico (SHA-256):** Antes de persistir qualquer alteracao, o motor calcula hashes canonicos normalizados (`compute_empresa_hash`, `compute_motorista_hash`). Registros identicos sao marcados como `SKIPPED`, prevenindo loops infinitos e escritas redundantes.
+2. **Resolucao Dinamica de Chaves Estrangeiras:** Como as chaves primarias e relacionamentos diferem entre as instancias (`id_empresa` inteiro vs. `empresa_id` UUID), o sincronizador resolve dinamicamente a associacao baseando-se no CNPJ da empresa antes de inserir ou vincular o condutor.
+3. **Mapeamento Flexivel de Chaves Naturais:** A reconciliacao de condutores prioriza `CPF`, seguida por `Email` e pela tupla `(Nome Normalizado, Telefone Limpo)`, viabilizando pareamento mesmo em cadastros com completude assimetrica.
+4. **Trilha de Auditoria Transacional (`rpa_sync_log`):** Cada operacao realizada gera um registro auditavel com carimbo UTC, direcao (`db1` ou `db2`), chave natural, acao (`INSERT`, `UPDATE`, `SKIPPED`) e hash de conteudo.
+
+### 9.2 Matriz de De-Para de Entidades
+
+| Entidade | Instancia Operacional (DB1) | Instancia Corporativa (DB2) | Regra de Transformacao / Resolucao |
+| :--- | :--- | :--- | :--- |
+| **Empresa** | `id` (SERIAL) | `id` (UUID) | Geracao de novo UUID ou vinculacao por CNPJ |
+| | `nome` (VARCHAR 150) | `nome` / `razao_social` | Trim e replicacao para razao social se nula |
+| | `cnpj` (CHAR 14) | `cnpj` (VARCHAR 14) | Higienizacao estrita de pontuacao (`clean_cnpj`) |
+| | `codigo` (VARCHAR 20) | `codigo_interno` (VARCHAR 20) | Prefixo padrao `EMP-{CNPJ_FINAL}` se ausente |
+| **Motorista** | `id` (SERIAL) | `id` (UUID) | Geracao de novo UUID ou pareamento por CPF/Email |
+| | `id_empresa` (INTEGER FK) | `empresa_id` (UUID FK) | Lookup por CNPJ da empresa correspondente |
+| | `nome` (VARCHAR 150) | `nome_completo` (VARCHAR 250) | Trim e conversao direta |
+| | `email` (VARCHAR 254) | `email` (VARCHAR 150) | `clean_email` (minusculas e sem espacos) |
+| | `telefone` (VARCHAR 20) | `telefone` (VARCHAR 20) | Limpeza de caracteres nao numericos |
+| | `data_nascimento` (DATE) | `data_nascimento` (DATE) | Conversao direta para objeto `date` |
+| | `senha` (VARCHAR 100) | `senha_hash` (VARCHAR 255) | Hash bcrypt seguro temporario na criacao |
+| | `assinatura` (VARCHAR 128) | `url_assinatura_geral` (TEXT) | Mapeamento de identificador/URL de assinatura |
+| | *(nao existente)* | `tipo` | Valor fixo `'motorista'` (`ty_tipo_usuario`) |
+| | *(nao existente)* | `cargo` | Valor fixo `'Motorista'` |
+| | *(nao existente)* | `nivel_acesso` | Valor fixo `'conducao'` (`ty_nivel_acesso`) |
+
+### 9.3 Interface de Linha de Comando (CLI)
+
+O script `01_postgresql/11_rpa/main.py` disponibiliza subcomandos completos:
+
+```bash
+# Ciclo unico de sincronizacao bidirecional
+python 01_postgresql/11_rpa/main.py run
+
+# Simulacao sem alteracao fisica (dry-run)
+python 01_postgresql/11_rpa/main.py run --dry-run
+
+# Execucao continua como daemon com intervalo customizado (segundos)
+python 01_postgresql/11_rpa/main.py daemon --interval 30
+
+# Inicializacao e carga de homologacao
+python 01_postgresql/11_rpa/main.py init-db --seed
+
+# Diagnostico de conectividade e volumetria
+python 01_postgresql/11_rpa/main.py stats
+
+# Consulta aos ultimos registros de auditoria
+python 01_postgresql/11_rpa/main.py audit --limit 20
+```
+
+### 9.4 Testes Automatizados
+
+A suite em `01_postgresql/11_rpa/tests/` contem 13 testes automatizados cobrindo normalizacao, geracao de hashes, sincronizacao bidirecional, deteccao de divergencias e idempotencia:
+
+```bash
+pytest 01_postgresql/11_rpa/tests/
+```
