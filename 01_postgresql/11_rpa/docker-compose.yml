@@ -1,0 +1,14 @@
+services:
+  rpa-syncer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: efficientia-rpa-syncer
+    restart: unless-stopped
+    env_file:
+      - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -74,7 +74,7 @@ def collect_files():
             seen.add(rel)
 
             ext = p.suffix.lower() if p.suffix else p.name.lower()
-            if ext not in TEXT_EXT and not rel.endswith(".example"):
+            if ext not in TEXT_EXT and not rel.endswith(".example") and p.name.lower() not in {"dockerfile", ".dockerignore"}:
                 continue
 
             try:
@@ -89,7 +89,8 @@ def collect_files():
                 ".sql": "sql", ".sh": "bash", ".js": "js", ".json": "json",
                 ".md": "md", ".redis": "redis", ".conf": "conf",
                 ".yml": "yaml", ".yaml": "yaml", ".py": "python",
-                ".cypher": "cypher", ".dbml": "sql"
+                ".cypher": "cypher", ".dbml": "sql", "dockerfile": "bash",
+                ".dockerignore": "text"
             }
             lang = lang_map.get(ext, "text")
             files.append({"path": rel, "lang": lang, "content": raw})

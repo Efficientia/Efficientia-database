@@ -84,6 +84,19 @@ Efficientia-database/
 │   │   ├── 02_test_hierarquia_recursiva.sql      # Testes anti-ciclo, validação de etapas e subárvore
 │   │   ├── 03_test_auditoria_dau_e_recuperacao.sql # Testes de auditoria, registro DAU e restore cirúrgico
 │   │   └── check_postgresql.sh                   # Runner automatizado em bash para integração contínua
+│   ├── 11_rpa/                                   # RPA de sincronização bidirecional e reconciliação
+│   │   ├── config.py                             # Configurações de conexão para instâncias PostgreSQL
+│   │   ├── database.py                           # Pool de conexões e gerenciamento de sessões SQLAlchemy
+│   │   ├── models.py                             # Schemas declarativos do DB1 (operacional), DB2 (corporativo) e log
+│   │   ├── mapper.py                             # Sanitização de chaves naturais, cálculo de hash SHA-256 e de-para
+│   │   ├── syncer.py                             # Motor autônomo de sincronização e reconciliação bidirecional
+│   │   ├── init_schemas.py                       # Provisionamento de tabelas e carga inicial de homologação
+│   │   ├── main.py                               # Interface de linha de comando CLI (run, daemon, stats, etc.)
+│   │   ├── requirements.txt                      # Dependências de execução (SQLAlchemy, psycopg2, pytest)
+│   │   ├── Dockerfile                            # Imagem para execução em container de microsserviço
+│   │   ├── docker-compose.yml                    # Orquestração do daemon e bancos de dados locais
+│   │   ├── README.md                             # Documentação técnica da CLI, regras e matriz de de-para
+│   │   └── tests/                                # Suíte de testes automatizados com pytest (13 cenários)
 │   └── docs/                                     # Documentação analítica e formal
 │       ├── NORMALIZACAO.md                       # Prova formal de 1FN a 5FN por tabela
 │       ├── verificacao_normalizacao.sql          # Script SQL de checagem de integridade relacional
@@ -291,6 +304,7 @@ sequenceDiagram
 Cada subdiretório possui um documento técnico dedicado contendo dicionário completo de atributos, diagramas conceituais específicos do paradigma e instruções granulares de operação:
 
 * [Documentação do Módulo PostgreSQL](./01_postgresql/README.md)
+* [RPA de Sincronização Bidirecional PostgreSQL](./01_postgresql/11_rpa/README.md)
 * [Documentação do Módulo Redis](./02_redis/README.md)
 * [Documentação do Módulo MongoDB](./03_mongodb/README.md)
 * [Documentação do Módulo Neo4j](./04_neo4j/README.md)
@@ -316,6 +330,8 @@ Os diretórios `01_postgresql/` e `02_redis/` contêm arquivos `.env.example` qu
 | Variável | Módulo | Exemplo de Valor Padrão | Finalidade Técnica |
 | :--- | :--- | :--- | :--- |
 | `DATABASE_URL` | PostgreSQL / Redis | `postgresql://usuario:senha@localhost:5432/efficientia` | URI padrão de conexão ao servidor PostgreSQL em modo de sessão direta |
+| `DB1_URL` | PostgreSQL / RPA | `postgresql+psycopg2://user:pass@host:5432/db_operacional` | URI de conexão à Instância Operacional (DB1) |
+| `DB2_URL` | PostgreSQL / RPA | `postgresql+psycopg2://user:pass@host:5432/db_corporativo` | URI de conexão à Instância Corporativa (DB2) |
 | `REDIS_URL` | Redis | `redis://localhost:6379/0` ou `rediss://usuario:senha@servidor:6379` | URI de conexão ao servidor Redis (suporta conexões abertas ou sobre TLS) |
 | `APP_ENV` | Redis | `development` | Identificador do ambiente (`development`, `staging`, `production`) usado no prefixo das chaves |
 | `RELAY_POLL_INTERVAL_SECONDS` | Redis | `2.0` | Intervalo em segundos entre ciclos de leitura da tabela `tb_outbox_evento` |
