@@ -836,22 +836,41 @@ def build_workspace_html(output_path=None):
         shell_head
     )
 
-    # Botões e links
-    shell_head = shell_head.replace(
-        '.btn.yellow{background:var(--yellow);border-color:var(--yellow);color:' + _P_INK + ';font-weight:600}',
-        '.btn.yellow{background:var(--brand);border-color:var(--brand);color:#FFFFFF;font-weight:600}'
+    # Botões e detalhes visuais: alinhamento à identidade azul e verde do Efficientia
+    shell_head = re.sub(
+        r'\.btn\.yellow\{[^}]*\}',
+        '.btn.yellow{background:var(--brand);border-color:var(--brand);color:#FFFFFF;font-weight:600;box-shadow:0 2px 8px rgba(15,81,174,.25)}',
+        shell_head
+    )
+    shell_head = re.sub(
+        r'\.btn\.yellow:hover\{[^}]*\}',
+        '.btn.yellow:hover{background:var(--brand-ink);border-color:var(--brand-ink);color:#FFFFFF}',
+        shell_head
+    )
+    shell_head = re.sub(
+        r'\.btn\.yellow kbd\{[^}]*\}',
+        '.btn.yellow kbd{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#FFFFFF}',
+        shell_head
     )
     shell_head = shell_head.replace(
-        '.btn.yellow:hover{background:var(--gold);border-color:var(--gold);color:' + _P_INK + '}',
-        '.btn.yellow:hover{background:var(--brand-ink);border-color:var(--brand-ink);color:#FFFFFF}'
+        '.hero .bar{width:36px;height:4px;border-radius:4px;background:var(--yellow);margin-bottom:18px}',
+        '.hero .bar{width:36px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--brand),var(--accent-green));margin-bottom:18px}'
     )
     shell_head = shell_head.replace(
-        '.btn.yellow:hover{filter:brightness(.97);color:' + _P_INK + '}',
-        '.btn.yellow:hover{filter:brightness(.97);color:#FFFFFF}'
+        '.hero h1 em{font-style:normal;color:var(--brand);background:linear-gradient(transparent 80%,var(--yellow) 80%,var(--yellow) 92%,transparent 92%)}',
+        '.hero h1 em{font-style:normal;color:var(--brand);background:linear-gradient(transparent 80%,var(--accent-green) 80%,var(--accent-green) 92%,transparent 92%)}'
     )
     shell_head = shell_head.replace(
-        '.btn.yellow kbd{background:rgba(255,255,255,.5);border-color:rgba(22,17,42,.15);color:' + _P_MUTED + '}',
-        '.btn.yellow kbd{background:rgba(255,255,255,.5);border-color:rgba(9,38,77,.15);color:var(--muted)}'
+        '.section-head>.section-title::before{content:"";width:4px;height:18px;border-radius:4px;background:var(--yellow);flex:none}',
+        '.section-head>.section-title::before{content:"";width:4px;height:18px;border-radius:4px;background:linear-gradient(180deg,var(--brand),var(--accent-green));flex:none}'
+    )
+    shell_head = shell_head.replace(
+        '.coll.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 -3px 0 var(--yellow)}',
+        '.coll.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 -3px 0 var(--brand)}'
+    )
+    shell_head = shell_head.replace(
+        '.pal-i mark{background:var(--yellow-soft);color:inherit;border-radius:3px;padding:0 1px;box-shadow:inset 0 -2px 0 var(--yellow)}',
+        '.pal-i mark{background:var(--brand-soft);color:inherit;border-radius:3px;padding:0 1px;box-shadow:inset 0 -2px 0 var(--brand)}'
     )
     shell_head = shell_head.replace(
         '.er-node .er-shadow{fill:' + _P_INK + ';opacity:.035}',
@@ -1025,7 +1044,7 @@ svg.sel .g-node.prod.on .g-box{stroke:var(--brand);stroke-width:2;fill:var(--bra
     ${box(528, 222, 160, 'MongoDB', 'analítico · auditoria', 'db', ENGINE.mongo.color)}
     ${box(758, 30, 190, 'Analytics / BI', 'views operacionais', '')}
     ${box(758, 132, 190, 'Neo4j', 'malha logística', 'db', ENGINE.neo4j.color)}
-    ${box(842, 248, 120, 'Este repo', 'migrations', '', '#FF9E0E')}
+    ${box(842, 248, 120, 'Este repo', 'migrations', '', '#56D867')}
   </svg>`;
 }
 
